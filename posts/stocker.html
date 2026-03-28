@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackTheBox: Stocker — Bypass a Logins con Inyecciones NoSQL y Escalada de Privilegios en Node.js — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(163,230,53,.1);color:#a3e635;border:1px solid rgba(163,230,53,.25)">HackTheBox</span>
+                    <span class="pdate">2025-04-05</span>
+                </div>
+                <h1 class="ph1">HackTheBox: Stocker — Bypass a Logins con Inyecciones NoSQL y Escalada de Privilegios en Node.js</h1>
+                <p class="psum">Bypass de login mediante inyecciones NoSQL en MongoDB, explotación de HTML-to-PDF con LFI, y escalada de privilegios vía path traversal en scripts de Node.js.</p>
+                <div class="ptr">
+                    <span class="tag">NoSQL Injection</span>
+                    <span class="tag">LFI</span>
+                    <span class="tag">Node.js</span>
+                    <span class="tag">PrivEsc</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>Recientemente, me enfrenté al desafío de la máquina "Stocker" en HackTheBox, catalogada con una dificultad media. Esta experiencia me permitió explorar en profundidad varias vulnerabilidades web, destacando especialmente la inyección NoSQL y técnicas avanzadas de escalada de privilegios en entornos construidos sobre Node.js. A continuación, compartiré todo el proceso que seguí para comprometer esta máquina, incluyendo mis razonamientos, pruebas, errores y descubrimientos. Espero que esta guía sirva como una herramienta educativa valiosa para otros entusiastas y profesionales de la ciberseguridad.</p>
+
+                <h2>1. Enumeración Inicial</h2>
+
+                <p>Empecé con la etapa clásica de reconocimiento. Realicé un escaneo de puertos completo para obtener una imagen clara de los servicios expuestos:</p>
+
+                <pre><code>nmap -p- --min-rate 5000 -sCV -oN nmap.txt 10.10.11.196</code></pre>
+
+                <p>Este escaneo reveló que los siguientes puertos estaban abiertos:</p>
+
+                <ul>
+                    <li><strong>22/tcp:</strong> SSH (OpenSSH 8.2p1)</li>
+                    <li><strong>80/tcp:</strong> HTTP (nginx 1.18.0)</li>
+                </ul>
+
+                <p>Al acceder al puerto 80 desde el navegador, fui redirigido automáticamente al dominio <code>stocker.htb</code>. Tras agregar esta entrada al archivo <code>/etc/hosts</code>, procedí a analizar el sitio. Me encontré con una tienda de muebles sencilla, sin funcionalidades llamativas o interactivas a primera vista. Esto sugería que el contenido dinámico podría estar oculto o disponible solo a usuarios autenticados, lo cual motivó una búsqueda más profunda.</p>
+
+                <h2>2. Descubrimiento de Subdominios</h2>
+
+                <p>Dado que el sitio principal no ofrecía mucho de interés, consideré que podría haber subdominios con otras funcionalidades. Utilicé <code>ffuf</code> para realizar una búsqueda de virtual hosts usando el encabezado Host, con el siguiente comando:</p>
+
+                <pre><code>ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://stocker.htb -H "Host: FUZZ.stocker.htb"</code></pre>
+
+                <p>Esto me permitió descubrir el subdominio <code>dev.stocker.htb</code>. Lo añadí también al archivo <code>/etc/hosts</code> y comencé a explorarlo.</p>
+
+                <h2>3. Análisis del Subdominio dev.stocker.htb</h2>
+
+                <p>Este subdominio presentaba una página de inicio de sesión bastante básica. Como suele ser habitual, intenté algunas credenciales por defecto sin éxito. Luego me detuve a inspeccionar el almacenamiento local y las cookies. Allí encontré una cookie llamada <code>connect.sid</code>, lo cual es típico de aplicaciones construidas con Express.js, un framework de Node.js. Esto me llevó a asumir que el backend podría estar usando MongoDB como base de datos, un stack común para este tipo de apps.</p>
+
+                <p>Esto encendió una alarma: si los desarrolladores no habían validado correctamente la entrada del usuario, probablemente podía explotar una inyección NoSQL.</p>
+
+                <h2>4. Explotación de Inyección NoSQL</h2>
+
+                <p>En las bases de datos NoSQL como MongoDB, si una aplicación utiliza directamente la entrada del usuario en una consulta (por ejemplo, con <code>findOne()</code>), sin asegurar que el contenido sea del tipo esperado, es posible manipular la estructura de la consulta usando operadores especiales como <code>$ne</code>, <code>$gt</code>, <code>$regex</code>, etc.</p>
+
+                <p>La aplicación enviaba los datos de inicio de sesión en formato <code>x-www-form-urlencoded</code>, pero eso limita nuestras posibilidades, ya que Mongo interpretará los valores como strings simples. Para poder incluir operadores, necesitábamos enviar la solicitud en formato JSON crudo. Por eso modifiqué la petición con Burp Suite y la reconstruí así:</p>
+
+<pre><code>POST /api/login HTTP/1.1
+Host: dev.stocker.htb
+Content-Type: application/json
+
+{ "username": {"$ne": null}, "password": {"$ne": null} }</code></pre>
+
+                <p>Aquí lo que hicimos fue utilizar el operador <code>$ne</code> (not equal) para que cualquier documento en la base de datos que tenga un valor diferente a <code>null</code> para <code>username</code> y <code>password</code> sea válido. Como Mongo está buscando el primer documento que cumpla esa condición, y ambos campos están presentes en todos los usuarios, logramos autenticarnos sin necesidad de conocer credenciales reales.</p>
+
+                <p>Este tipo de ataque solo es posible si el backend espera un string pero no valida que efectivamente lo sea. Por ejemplo:</p>
+
+                <pre><code>User.findOne({username: req.body.username, password: req.body.password})</code></pre>
+
+                <p>Aquí <code>req.body.username</code> puede ser un string o un objeto, y si es un objeto con <code>$ne</code>, se ejecutará igual. De esta manera, obtuvimos acceso al panel como un usuario válido, lo cual fue el primer paso clave hacia el compromiso total.</p>
+
+                <h2>5. Análisis de la Funcionalidad de Pedidos y Vulnerabilidad HTML/PDF</h2>
+
+                <p>Ya dentro del panel, la aplicación tenía una funcionalidad para realizar pedidos. Al probarla, noté que generaba archivos PDF dinámicos a partir de la información que uno ingresaba, como el nombre del producto. Esto inmediatamente me llevó a pensar en una posible inyección HTML reflejada en PDF.</p>
+
+                <p>Intercepté la petición con Burp y modifiqué el contenido del pedido para incluir HTML malicioso dentro del campo <code>title</code>:</p>
+
+                <pre><code>"title": "&lt;iframe src=\"file:///etc/passwd\"&gt;&lt;/iframe&gt;"</code></pre>
+
+                <p>Al generar el PDF y abrirlo, efectivamente se incluía un iframe que mostraba el contenido de <code>/etc/passwd</code>. Esto confirmó que el motor que generaba el PDF no sanitizaba el HTML, lo que permitía realizar ataques tipo file inclusion a través de iframes locales.</p>
+
+                <h2>6. Extracción de Credenciales desde el Código Fuente</h2>
+
+                <p>En <code>index.js</code>, encontré una cadena de conexión clara hacia MongoDB:</p>
+
+                <pre><code>const dbURI = "mongodb://dev:IHeardPassphrasesArePrettySecure@localhost/dev?authSource=admin&amp;w=1";</code></pre>
+
+                <p>Con esto, ya tenía usuario y contraseña. Aunque el usuario era <code>dev</code>, no existía tal cuenta en el sistema Linux. Revisando <code>/etc/passwd</code> que ya había expuesto antes, noté que había un usuario llamado <code>angoose</code>. Decidí probar las mismas credenciales a través de SSH:</p>
+
+                <pre><code>ssh angoose@stocker.htb</code></pre>
+
+                <p>¡Y funcionaron! Habíamos logrado obtener una shell en el sistema con un usuario real.</p>
+
+                <h2>7. Escalada de Privilegios con Node.js y Path Traversal</h2>
+
+                <p>El siguiente paso fue buscar formas de escalar privilegios. Ejecuté:</p>
+
+                <pre><code>sudo -l</code></pre>
+
+                <p>Y descubrí algo muy interesante:</p>
+
+                <pre><code>(ALL) /usr/bin/node /usr/local/scripts/*.js</code></pre>
+
+                <p>Esto significa que el usuario <code>angoose</code> podía ejecutar cualquier archivo JavaScript dentro de <code>/usr/local/scripts/</code> usando Node.js como root.</p>
+
+                <p>El problema es que no tenía permisos de escritura en ese directorio. Sin embargo, gracias a la forma en la que funciona el patrón <code>*.js</code>, y a que Node.js permite rutas relativas, era posible realizar un ataque de path traversal.</p>
+
+                <p>Creé un archivo <code>pwn.js</code> en <code>/tmp</code> con el siguiente contenido:</p>
+
+<pre><code>const { exec } = require('child_process');
+exec('chmod u+s /bin/bash');</code></pre>
+
+                <p>Y luego lo ejecuté con:</p>
+
+                <pre><code>sudo /usr/bin/node /usr/local/scripts/../../../tmp/pwn.js</code></pre>
+
+                <p>Finalmente:</p>
+
+<pre><code>bash -p
+whoami
+root</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+</body>
+</html>

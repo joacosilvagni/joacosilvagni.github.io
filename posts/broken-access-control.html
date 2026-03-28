@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broken Access Control: Teoría y Ejemplos Prácticos — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.25)">Teoría / OWASP</span>
+                    <span class="pdate">2025-03-27</span>
+                </div>
+                <h1 class="ph1">Broken Access Control: Teoría y Ejemplos Prácticos</h1>
+                <p class="psum">Análisis de la vulnerabilidad más crítica según OWASP Top 10: escalación horizontal/vertical, IDOR, mecanismos DAC/MAC/RBAC/ABAC y estrategias de mitigación.</p>
+                <div class="ptr">
+                    <span class="tag">OWASP</span>
+                    <span class="tag">IDOR</span>
+                    <span class="tag">Access Control</span>
+                    <span class="tag">Web Security</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>Esta publicación aborda una de las vulnerabilidades más comunes en servidores web actuales: Broken Access Control. Se presentan ejemplos prácticos y teorías sobre cómo los atacantes pueden obtener acceso no autorizado a recursos, escalando privilegios de manera horizontal o vertical.</p>
+
+                <h2>¿Qué es el Broken Access Control?</h2>
+                <p>El Broken Access Control (Control de Acceso Roto) es una vulnerabilidad de seguridad común en aplicaciones web. Ocurre cuando los mecanismos de control de acceso no implementan correctamente las restricciones para que los usuarios accedan solo a los recursos o datos para los cuales tienen permisos. Esto puede permitir a los atacantes eludir estas restricciones y obtener acceso a datos sensibles o a funcionalidades que deberían estar restringidas.</p>
+
+                <h2>Tipos de Escalación de Privilegios</h2>
+
+                <h3>Escalación de Privilegios Horizontal</h3>
+                <p>Un atacante puede acceder a los recursos de otros usuarios con el mismo nivel de privilegios.</p>
+                <p>Ejemplo:</p>
+<pre><code>http://example.com/profile.php?id=123  (usuario A)
+http://example.com/profile.php?id=124  (usuario B — acceso no autorizado)</code></pre>
+
+                <h3>Escalación de Privilegios Vertical</h3>
+                <p>Un atacante puede acceder a recursos restringidos para un nivel de privilegio superior.</p>
+                <p>Ejemplo:</p>
+<pre><code>http://example.com/admin.php?admin=false  (usuario normal)
+http://example.com/admin.php?admin=true   (acceso admin)</code></pre>
+
+                <h3>Referencias de Objetos Directos Inseguras (IDOR)</h3>
+                <p>Un atacante puede modificar identificadores de objetos para acceder a recursos que no le pertenecen.</p>
+                <p>Ejemplo:</p>
+<pre><code>http://example.com/file.php?id=456  (archivo A)
+http://example.com/file.php?id=457  (archivo B — no autorizado)</code></pre>
+
+                <h3>Comprobaciones Insuficientes de Acceso</h3>
+                <p>Las aplicaciones no verifican adecuadamente los permisos antes de permitir el acceso a ciertos recursos.</p>
+
+                <h2>Mecanismos de Control de Acceso</h2>
+
+                <h3>1. Discretionary Access Control (DAC)</h3>
+                <p>El dueño del recurso determina quién puede acceder y qué acciones pueden realizar.</p>
+                <p>Ejemplo: Permisos de archivos en Linux (chmod).</p>
+
+                <h3>2. Mandatory Access Control (MAC)</h3>
+                <p>Los accesos son controlados por reglas predefinidas del sistema.</p>
+                <p>Ejemplo: Entornos gubernamentales con información clasificada.</p>
+
+                <h3>3. Role-Based Access Control (RBAC)</h3>
+                <p>Los usuarios se asignan roles específicos que determinan su acceso.</p>
+                <p>Ejemplo: Administradores con acceso completo, empleados con acceso limitado según rol.</p>
+
+                <h3>4. Attribute-Based Access Control (ABAC)</h3>
+                <p>Acceso determinado por atributos: ubicación, hora, dispositivo, rol.</p>
+                <p>Ejemplo: Acceso a datos solo si el usuario está en una ubicación específica o usa un dispositivo autorizado.</p>
+
+                <h2>Ejemplos Prácticos de Broken Access Control</h2>
+
+                <h3>Ejemplo 1: Escalación de Privilegios Horizontal</h3>
+                <p>Escenario: Un sistema permite ver perfiles propios, pero el atacante cambia el ID en la URL.</p>
+<pre><code># URL vulnerable:
+http://example.com/profile.php?id=1001  (usuario A)
+http://example.com/profile.php?id=1002  (usuario B — accede sin permisos)</code></pre>
+
+                <h3>Ejemplo 2: Escalación de Privilegios Vertical</h3>
+                <p>Escenario: Un usuario normal accede a una página de administración cambiando un parámetro.</p>
+<pre><code># URL vulnerable:
+http://example.com/admin.php?admin=false
+# Explotación:
+http://example.com/admin.php?admin=true  (acceso a funcionalidades admin)</code></pre>
+
+                <h3>Ejemplo 3: IDOR</h3>
+                <p>Escenario: Identificadores predecibles en URLs. El atacante incrementa el ID para acceder a objetos ajenos.</p>
+<pre><code>http://example.com/file.php?id=123  (archivo A)
+http://example.com/file.php?id=124  (archivo B — no debería acceder)</code></pre>
+
+                <h3>Ejemplo 4: Comprobaciones Insuficientes</h3>
+                <p>El usuario accede a información sensible de otros usuarios simplemente navegando a una URL sin tener permisos.</p>
+
+                <h2>Prevención del Broken Access Control</h2>
+                <ul>
+                    <li>Validación adecuada de permisos en el servidor (nunca solo en el cliente).</li>
+                    <li>Uso de controles de acceso granulares por recurso.</li>
+                    <li>Pruebas regulares de seguridad y pentesting.</li>
+                    <li>Principio de menor privilegio: otorgar solo los permisos necesarios.</li>
+                </ul>
+
+                <h2>Conclusión</h2>
+                <p>El Broken Access Control es una vulnerabilidad crítica que puede permitir a los atacantes acceder a datos y funcionalidades no autorizadas. Implementar un control de acceso adecuado es fundamental para proteger los recursos de una aplicación y evitar que los atacantes escalen privilegios o accedan a información sensible.</p>
+                <p>Es importante realizar auditorías y pruebas de seguridad periódicas para detectar y corregir cualquier fallo en los mecanismos de acceso.</p>
+            </div>
+        </div>
+    </div>
+    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+</body>
+</html>

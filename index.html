@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Joaquin Silvagni — Pentester</title>
+    <meta name="description" content="Portfolio de ciberseguridad de Joaquin Silvagni (zSodex). Pentester certificado eJPT, write-ups de HackTheBox, investigación en seguridad web y herramientas ofensivas.">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-logo" href="index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="#ejpt">Cert</a></li>
+            <li><a href="#blog">Blog</a></li>
+            <li><a href="#proyectos">Proyectos</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-grid-bg"></div>
+        <div class="hero-glow"></div>
+        <div class="hero-glow2"></div>
+        <div class="hero-content">
+            <div class="hero-tag fi">Cybersecurity · Offensive Security</div>
+            <h1 class="fi">Joaquin<br><span class="accent">Silvagni</span></h1>
+            <p class="hero-desc fi">Apasionado por la seguridad ofensiva y el pentesting.<br>Certificado eJPT —
+                enfocado en evaluaciones de redes,<br>aplicaciones web y análisis de malware.<br>Documentando el
+                aprendizaje a través de write-ups técnicos.</p>
+            <div class="hero-badges fi">
+                <span class="badge highlight">eJPT certified</span>
+                <span class="badge">HackTheBox</span>
+                <span class="badge">TryHackMe</span>
+                <span class="badge">Web App Pentesting</span>
+                <span class="badge">Network Recon</span>
+                <span class="badge">Post-Exploitation</span>
+            </div>
+            <div class="hero-cta fi">
+                <a class="btn btn-primary" href="#blog">Ver Write-ups →</a>
+                <a href="https://github.com/joacosilvagni" target="_blank" class="btn btn-ghost">GitHub ↗</a>
+            </div>
+        </div>
+        <div class="terminal-card fi">
+            <div class="terminal-bar">
+                <div class="dot dot-r"></div>
+                <div class="dot dot-y"></div>
+                <div class="dot dot-g"></div>
+                <span class="terminal-title">zsodex@kali — whoami</span>
+            </div>
+            <div class="terminal-body">
+                <div><span class="t-prompt">❯</span> <span class="t-cmd">cat profile.json</span></div>
+                <div class="t-out">{</div>
+                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"name"</span>: <span class="t-str">"Joaquin Silvagni"</span>,</div>
+                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"alias"</span>: <span class="t-str">"zSodex"</span>,</div>
+                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"role"</span>: <span class="t-str">"Pentester"</span>,</div>
+                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"cert"</span>: <span class="t-str">"eJPT"</span>,</div>
+                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"status"</span>: <span class="t-str">"open to work"</span></div>
+                <div class="t-out">}</div>
+                <div style="margin-top:.75rem"><span class="t-prompt">❯</span> <span class="t-cursor"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="fd">
+
+    <!-- CERTIFICACIÓN -->
+    <div class="sw" id="ejpt">
+        <div class="sl">Certificación</div>
+        <h2 class="st">eJPT — eLearnSecurity</h2>
+        <div class="ejpt-card">
+            <div>
+                <div class="ejpt-title">Junior Penetration Tester (eJPT)</div>
+                <div class="ejpt-sub">eLearnSecurity / INE Security</div>
+                <p class="ejpt-desc">El eJPT valida habilidades prácticas en evaluaciones de seguridad reales.
+                    Consiste en un laboratorio en vivo donde se debe comprometer una red completa aplicando técnicas
+                    de reconocimiento, explotación y post-explotación.</p>
+                <p class="ejpt-desc">Cubre redes TCP/IP, metodologías de pentesting, enumeración de servicios,
+                    vulnerabilidades web y de red, y pivoting. Aprobado con resultados sólidos.</p>
+                <div class="ejpt-topics">
+                    <span class="tt">Network Pentesting</span>
+                    <span class="tt">Web App Attacks</span>
+                    <span class="tt">Host & Network Enumeration</span>
+                    <span class="tt">Pivoting</span>
+                    <span class="tt">Exploitation</span>
+                    <span class="tt">Post-Exploitation</span>
+                    <span class="tt">Metasploit</span>
+                    <span class="tt">Burp Suite</span>
+                </div>
+            </div>
+            <div class="ejpt-badge-box">
+                <div class="ejpt-badge-icon">🎯</div>
+                <div class="ejpt-badge-label">eJPT<br>Certified</div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="fd">
+
+    <!-- BLOG -->
+    <div class="sw" id="blog">
+        <div class="sl">Write-ups & Research</div>
+        <h2 class="st">Artículos técnicos</h2>
+        <div class="filters" id="filters-container"></div>
+        <div class="ag" id="cards-container"></div>
+    </div>
+
+    <hr class="fd">
+
+    <!-- PROYECTOS -->
+    <div class="sw" id="proyectos">
+        <div class="sl">GitHub · Proyectos</div>
+        <h2 class="st">Código propio</h2>
+        <div class="pg">
+            <a class="pc" href="https://github.com/joacosilvagni/littlebastard" target="_blank">
+                <div class="ph"><span class="pi">🐍</span><span class="pl"><span class="ld lang-python"></span>Python</span></div>
+                <div class="pn">littlebastard</div>
+                <div class="pd">RAT en Python con sockets. Ejecuta comandos remotos, lista archivos y más.</div>
+            </a>
+            <a class="pc" href="https://github.com/joacosilvagni/harder-tryhackme" target="_blank">
+                <div class="ph"><span class="pi">📝</span><span class="pl"><span class="ld lang-md"></span>Markdown</span></div>
+                <div class="pn">harder-tryhackme</div>
+                <div class="pd">Write-up Harder (TryHackMe). .git expuesto, HMAC bypass type juggling PHP 7.3, RCE web.</div>
+            </a>
+            <a class="pc" href="https://github.com/joacosilvagni/thm-cheese" target="_blank">
+                <div class="ph"><span class="pi">🧀</span><span class="pl"><span class="ld lang-md"></span>Markdown</span></div>
+                <div class="pn">thm-cheese</div>
+                <div class="pd">WriteUp Cheese CTF en TryHackMe paso a paso.</div>
+            </a>
+            <a class="pc" href="https://github.com/joacosilvagni/ikiai" target="_blank">
+                <div class="ph"><span class="pi">🌐</span><span class="pl"><span class="ld lang-html"></span>HTML</span></div>
+                <div class="pn">ikiai</div>
+                <div class="pd">Proyecto web personal. Activo y en desarrollo.</div>
+            </a>
+        </div>
+    </div>
+
+    <hr class="fd">
+
+    <!-- SKILLS -->
+    <div class="sw" id="skills">
+        <div class="sl">Stack técnico</div>
+        <h2 class="st">Herramientas & Skills</h2>
+        <div class="sg">
+            <div class="sk">
+                <div class="skt">Reconocimiento</div>
+                <ul class="skl">
+                    <li class="ski">Nmap / Masscan</li>
+                    <li class="ski">Gobuster / ffuf / dirsearch</li>
+                    <li class="ski">Subdominio hunting</li>
+                    <li class="ski">OSINT básico</li>
+                </ul>
+            </div>
+            <div class="sk">
+                <div class="skt">Explotación Web</div>
+                <ul class="skl">
+                    <li class="ski">Burp Suite</li>
+                    <li class="ski">SQL / NoSQL Injection</li>
+                    <li class="ski">XSS / CSRF / IDOR</li>
+                    <li class="ski">JWT Attacks</li>
+                    <li class="ski">LFI / RFI / Path Traversal</li>
+                </ul>
+            </div>
+            <div class="sk">
+                <div class="skt">Post-Explotación</div>
+                <ul class="skl">
+                    <li class="ski">LinPEAS / WinPEAS</li>
+                    <li class="ski">Privilege Escalation</li>
+                    <li class="ski">Pivoting</li>
+                    <li class="ski">Metasploit Framework</li>
+                    <li class="ski">John / Hashcat</li>
+                </ul>
+            </div>
+            <div class="sk">
+                <div class="skt">Desarrollo & Scripting</div>
+                <ul class="skl">
+                    <li class="ski">Python (scripts ofensivos)</li>
+                    <li class="ski">Bash scripting</li>
+                    <li class="ski">APK Analysis (apktool)</li>
+                    <li class="ski">HTML / CSS</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTACTO -->
+    <div class="cs" id="contacto">
+        <div class="sl" style="justify-content:center;margin-bottom:1rem">Contacto</div>
+        <h2 class="ct">¿Hablamos?</h2>
+        <p class="csub">Abierto a oportunidades en seguridad ofensiva, bug bounty y pentesting.</p>
+        <div class="cl">
+            <a href="mailto:joaquinsilvagni@gmail.com" class="btn btn-primary">Email →</a>
+            <a href="https://github.com/joacosilvagni" target="_blank" class="btn btn-ghost">GitHub ↗</a>
+        </div>
+    </div>
+
+    <footer>
+        <span>© 2025 <span class="fa">Joaquin Silvagni</span> · zSodex</span>
+        <span>Built with 🖤 · GitHub Pages</span>
+    </footer>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // CATEGORÍAS
+        // ═══════════════════════════════════════════════════════════
+        const CATEGORIES = [
+            { id: "htb", name: "HackTheBox", color: "#a3e635" },
+            { id: "web", name: "Web Security", color: "#00e5ff" },
+            { id: "tool", name: "Tool / Malware", color: "#ff3c6e" },
+            { id: "theory", name: "Teoría / OWASP", color: "#94a3b8" },
+            { id: "bugbounty", name: "Bug Bounty", color: "#fb923c" },
+            { id: "network", name: "Network", color: "#818cf8" }
+        ];
+
+        // ═══════════════════════════════════════════════════════════
+        // POSTS — metadata + link a página individual
+        // ═══════════════════════════════════════════════════════════
+        const POSTS = [
+            {
+                id: 1, cat: "htb",
+                title: "HackTheBox: Stocker — Bypass a Logins con Inyecciones NoSQL y Escalada de Privilegios en Node.js",
+                date: "2025-04-05",
+                desc: "Bypass de login mediante inyecciones NoSQL en MongoDB, explotación de HTML-to-PDF con LFI, y escalada de privilegios vía path traversal en scripts de Node.js.",
+                tags: ["NoSQL Injection", "LFI", "Node.js", "PrivEsc"],
+                url: "posts/stocker.html"
+            },
+            {
+                id: 2, cat: "web",
+                title: "JWT Token Manipulation — Vulnerabilidades en Autenticación Web",
+                date: "2025-04-03",
+                desc: "Análisis completo de técnicas de ataque sobre JWT: fuerza bruta de claves HS256, confusión de algoritmos RS256→HS256, inyección en el campo kid, none algorithm y más.",
+                tags: ["JWT", "Authentication", "Web Security", "Red Team"],
+                url: "posts/jwt-manipulation.html"
+            },
+            {
+                id: 3, cat: "bugbounty",
+                title: "Jenkins — Lectura Arbitraria de Archivos & PrivEsc ($5k Bug Bounty)",
+                date: "2025-04-02",
+                desc: "Explotación de lectura arbitraria de archivos en Jenkins 2.44 vía jenkins-cli, extracción de credenciales cifradas, crackeo con Hashcat y RCE mediante Script Console.",
+                tags: ["Jenkins", "LFI", "Hashcat", "Bug Bounty"],
+                url: "posts/jenkins.html"
+            },
+            {
+                id: 4, cat: "htb",
+                title: "HTB Instant — APK Analysis, JWT Abuse & SSH Key Extraction",
+                date: "2025-03-29",
+                desc: "Análisis de APK Android para extraer JWT hardcodeado, explotación de LFI en API REST para obtener clave SSH privada, y escalada vía descifrado de Solar Putty backup.",
+                tags: ["APK Analysis", "JWT", "LFI", "SSH"],
+                url: "posts/instant.html"
+            },
+            {
+                id: 5, cat: "htb",
+                title: "HTB Devvortex — Joomla CVE-2023-23752 & Apport-cli PrivEsc",
+                date: "2025-03-27",
+                desc: "Explotación de Joomla vulnerable (CVE-2023-23752) para obtener credenciales, reverse shell via template PHP, crackeo de hashes bcrypt y escalada con CVE-2023-1326.",
+                tags: ["Joomla", "CVE-2023-23752", "RCE", "PrivEsc"],
+                url: "posts/devvortex.html"
+            },
+            {
+                id: 6, cat: "htb",
+                title: "HTB Postman — Redis Sin Auth, SSH Injection & Webmin RCE",
+                date: "2025-03-27",
+                desc: "Inyección de clave SSH en Redis sin autenticación, crackeo de clave RSA privada con John, y RCE en Webmin 1.910 mediante CVE-2019-15107 con Metasploit.",
+                tags: ["Redis", "SSH Injection", "Webmin", "Metasploit"],
+                url: "posts/postman.html"
+            },
+            {
+                id: 7, cat: "theory",
+                title: "Broken Access Control — Teoría, Tipos y Ejemplos Prácticos",
+                date: "2025-03-27",
+                desc: "Análisis de la vulnerabilidad más crítica según OWASP Top 10: escalación horizontal/vertical, IDOR, mecanismos DAC/MAC/RBAC/ABAC y estrategias de mitigación.",
+                tags: ["OWASP", "IDOR", "Access Control", "Web Security"],
+                url: "posts/broken-access-control.html"
+            },
+            {
+                id: 8, cat: "tool",
+                title: "Darkord Spyware — Post-Exploitation Framework Móvil",
+                date: "2025-04-19",
+                desc: "Framework de post-explotación con C2 sobre Discord, payload cifrado AES-256 ejecutado en memoria (fileless), evasión anti-VM/sandbox, keylogger en tiempo real y persistencia automatizada.",
+                tags: ["C2", "AES-256", "Fileless", "Anti-AV", "Discord"],
+                url: "posts/darkord.html"
+            }
+        ];
+
+        // ═══════════════════════════════════════════════════════════
+        // UTILS
+        // ═══════════════════════════════════════════════════════════
+        let activeFilter = 'all';
+
+        function getCat(id) { return CATEGORIES.find(c => c.id === id); }
+
+        function hexToRgba(hex, a) {
+            const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+            return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // RENDER CARDS + FILTROS
+        // ═══════════════════════════════════════════════════════════
+        function buildCard(post) {
+            const cat = getCat(post.cat);
+            const color = cat ? cat.color : '#94a3b8';
+            const d = document.createElement('a');
+            d.className = 'ac';
+            d.href = post.url;
+            d.innerHTML =
+                '<span class="cat-badge" style="background:' + hexToRgba(color, .1) + ';color:' + color + ';border:1px solid ' + hexToRgba(color, .25) + '">' + (cat ? cat.name : (post.cat || 'Sin categoría')) + '</span>' +
+                '<div class="atitle">' + post.title + '</div>' +
+                '<div class="adesc">' + post.desc + '</div>' +
+                '<div class="atags">' + (post.tags || []).map(t => '<span class="tag">' + t + '</span>').join('') + '</div>' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:.25rem">' +
+                '<span class="adate">' + (post.date || '') + '</span>' +
+                '<span class="aarrow">Leer →</span></div>';
+            return d;
+        }
+
+        function renderCards() {
+            const fc = document.getElementById('filters-container');
+            fc.innerHTML = '';
+            const allBtn = document.createElement('button');
+            allBtn.className = 'filter-btn' + (activeFilter === 'all' ? ' active' : '');
+            allBtn.textContent = 'Todos (' + POSTS.length + ')';
+            allBtn.addEventListener('click', () => { activeFilter = 'all'; renderCards(); });
+            fc.appendChild(allBtn);
+            CATEGORIES.forEach(cat => {
+                const count = POSTS.filter(p => p.cat === cat.id).length;
+                if (!count) return;
+                const b = document.createElement('button');
+                b.className = 'filter-btn' + (activeFilter === cat.id ? ' active' : '');
+                b.textContent = cat.name + ' (' + count + ')';
+                if (activeFilter === cat.id) { b.style.borderColor = cat.color; b.style.color = cat.color; b.style.background = hexToRgba(cat.color, .08); }
+                b.addEventListener('click', () => { activeFilter = cat.id; renderCards(); });
+                fc.appendChild(b);
+            });
+            const cc = document.getElementById('cards-container');
+            cc.innerHTML = '';
+            const sorted = [...POSTS].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+            const filtered = activeFilter === 'all' ? sorted : sorted.filter(p => p.cat === activeFilter);
+            if (!filtered.length) {
+                cc.innerHTML = '<div style="font-family:var(--mono);font-size:.8rem;color:var(--text-dim);grid-column:1/-1;padding:2rem 0">No hay posts en esta categoría aún.</div>';
+            } else {
+                filtered.forEach(p => cc.appendChild(buildCard(p)));
+            }
+        }
+
+        renderCards();
+
+        // ═══════════════════════════════════════════════════════════
+        // MARKDOWN → HTML RENDERER
+        // ═══════════════════════════════════════════════════════════
+        function renderMD(md) {
+            if (!md) return '<p><em>Sin contenido.</em></p>';
+            let h = md
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/```([\s\S]*?)```/g, (_, c) => '<pre><code>' + c.trim() + '</code></pre>')
+                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                .replace(/^# (.+)$/gm, '<h2>$1</h2>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/^&gt; (.+)$/gm, '<blockquote><p>$1</p></blockquote>')
+                .replace(/^---$/gm, '<hr>')
+                .replace(/^- (.+)$/gm, '<li>$1</li>');
+            h = h.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => '<ul>' + m + '</ul>');
+            const bt = /^(<h[23]|<ul|<ol|<li|<pre|<blockquote|<hr)/;
+            h = h.split('\n').map(l => { l = l.trim(); if (!l) return ''; if (bt.test(l)) return l; return '<p>' + l + '</p>'; }).join('\n');
+            return h;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // SLUG GENERATOR
+        // ═══════════════════════════════════════════════════════════
+        function slugify(text) {
+            return text.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .substring(0, 60);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // POST HTML TEMPLATE GENERATOR
+        // ═══════════════════════════════════════════════════════════
+        function generatePostHTML(post, bodyHTML) {
+            const cat = getCat(post.cat);
+            const color = cat ? cat.color : '#94a3b8';
+            const catName = cat ? cat.name : (post.cat || 'Sin categoría');
+            const tagsHTML = (post.tags || []).map(t => '<span class="tag">' + t + '</span>').join('\n                    ');
+            return `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${post.title} — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:${hexToRgba(color,.1)};color:${color};border:1px solid ${hexToRgba(color,.25)}">${catName}</span>
+                    <span class="pdate">${post.date}</span>
+                </div>
+                <h1 class="ph1">${post.title}</h1>
+                <p class="psum">${post.desc}</p>
+                <div class="ptr">
+                    ${tagsHTML}
+                </div>
+            </div>
+            <div class="post-content">
+                ${bodyHTML}
+            </div>
+        </div>
+    </div>
+    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+</body>
+</html>`;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // ADMIN — TOKEN
+        // ═══════════════════════════════════════════════════════════
+        let _tok = '';
+        function saveTok() {
+            _tok = document.getElementById('globalTok').value.trim();
+            if (_tok) { document.getElementById('tokOk').style.display = 'block'; }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // ADMIN — TABS
+        // ═══════════════════════════════════════════════════════════
+        document.querySelectorAll('.adm-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.adm-tab').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+                if (btn.dataset.tab === 'tab-cats') renderCatList();
+                if (btn.dataset.tab === 'tab-posts') renderPostList();
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════
+        // ADMIN — OPEN / CLOSE
+        // ═══════════════════════════════════════════════════════════
+        const ov = document.getElementById('admOv');
+        function openAdmin() {
+            if (!document.getElementById('pdate').value)
+                document.getElementById('pdate').value = new Date().toISOString().slice(0, 10);
+            buildCatSelect();
+            ov.classList.add('open');
+        }
+        function closeAdmin() { ov.classList.remove('open'); }
+        document.getElementById('admBtn').addEventListener('click', openAdmin);
+        document.getElementById('admX').addEventListener('click', closeAdmin);
+
+        // ═══════════════════════════════════════════════════════════
+        // ADMIN — CATEGORÍAS
+        // ═══════════════════════════════════════════════════════════
+        const PALETTE = ['#00e5ff', '#a3e635', '#ff3c6e', '#fb923c', '#818cf8', '#34d399', '#f472b6', '#facc15', '#94a3b8', '#e879f9'];
+
+        function buildCatSelect() {
+            const sel = document.getElementById('pcat');
+            sel.innerHTML = '';
+            CATEGORIES.forEach(c => {
+                const o = document.createElement('option');
+                o.value = c.id; o.textContent = c.name;
+                sel.appendChild(o);
+            });
+        }
+        buildCatSelect();
+
+        function renderCatList() {
+            const el = document.getElementById('cat-list');
+            el.innerHTML = '';
+            if (!CATEGORIES.length) { el.innerHTML = '<div style="font-family:var(--mono);font-size:.75rem;color:var(--text-dim)">No hay categorías todavía.</div>'; return; }
+            CATEGORIES.forEach((cat, i) => {
+                const row = document.createElement('div');
+                row.className = 'cat-row';
+                const builtIn = i < 6;
+                row.innerHTML =
+                    '<span class="cat-color-dot" style="background:' + cat.color + '"></span>' +
+                    '<span class="cat-name">' + cat.name + '</span>' +
+                    '<span class="cat-id">' + cat.id + '</span>' +
+                    (!builtIn ? '<button class="btn btn-sm btn-danger" data-idx="' + i + '">Eliminar</button>' : '<span style="font-family:var(--mono);font-size:.6rem;color:var(--text-dim)">built-in</span>');
+                el.appendChild(row);
+            });
+            el.querySelectorAll('[data-idx]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    CATEGORIES.splice(idx, 1);
+                    renderCatList(); buildCatSelect();
+                    setMsg('catMsg', '✓ Categoría eliminada (guardá cambios para persistir).', 'ok');
+                });
+            });
+        }
+
+        // Color picker
+        (function initPicker() {
+            const picker = document.getElementById('color-picker');
+            PALETTE.forEach(c => {
+                const sw = document.createElement('span');
+                sw.className = 'color-swatch'; sw.style.background = c; sw.dataset.color = c;
+                sw.title = c;
+                sw.addEventListener('click', () => {
+                    picker.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('sel'));
+                    sw.classList.add('sel');
+                    document.getElementById('cat-color').value = c;
+                    updatePreview();
+                });
+                picker.appendChild(sw);
+            });
+        })();
+
+        document.getElementById('cat-color').addEventListener('input', updatePreview);
+        document.getElementById('cat-name-input').addEventListener('input', updatePreview);
+        function updatePreview() {
+            const color = document.getElementById('cat-color').value || '#00e5ff';
+            const name = document.getElementById('cat-name-input').value || 'Nombre';
+            const prev = document.getElementById('cat-preview');
+            prev.textContent = name;
+            try {
+                prev.style.background = hexToRgba(color, .1);
+                prev.style.color = color;
+                prev.style.border = '1px solid ' + hexToRgba(color, .25);
+            } catch (e) { }
+        }
+
+        document.getElementById('addCatBtn').addEventListener('click', () => {
+            const id = document.getElementById('cat-id').value.trim().replace(/\s+/g, '-').toLowerCase();
+            const name = document.getElementById('cat-name-input').value.trim();
+            const color = document.getElementById('cat-color').value.trim() || '#00e5ff';
+            if (!id || !name) { setMsg('catMsg', 'ID y nombre son obligatorios.', 'err'); return; }
+            if (CATEGORIES.find(c => c.id === id)) { setMsg('catMsg', 'Ya existe una categoría con ese ID.', 'err'); return; }
+            CATEGORIES.push({ id, name, color });
+            document.getElementById('cat-id').value = '';
+            document.getElementById('cat-name-input').value = '';
+            document.getElementById('cat-color').value = '';
+            renderCatList(); buildCatSelect(); renderCards();
+            setMsg('catMsg', '✓ Categoría creada. Publicá un post o guardá para persistir.', 'ok');
+        });
+
+        // ═══════════════════════════════════════════════════════════
+        // ADMIN — LISTA DE POSTS
+        // ═══════════════════════════════════════════════════════════
+        function renderPostList() {
+            const el = document.getElementById('post-list');
+            el.innerHTML = '';
+            if (!POSTS.length) { el.innerHTML = '<div style="font-family:var(--mono);font-size:.75rem;color:var(--text-dim)">No hay posts publicados.</div>'; return; }
+            const sorted = [...POSTS].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+            sorted.forEach(post => {
+                const cat = getCat(post.cat);
+                const row = document.createElement('div');
+                row.className = 'post-row';
+                const color = cat ? cat.color : '#94a3b8';
+                row.innerHTML =
+                    '<span style="width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0;display:inline-block"></span>' +
+                    '<span class="post-row-title">' + post.title + '</span>' +
+                    '<span class="post-row-date">' + post.date + '</span>' +
+                    '<button class="btn btn-sm btn-danger" data-id="' + post.id + '">✕</button>';
+                el.appendChild(row);
+            });
+            el.querySelectorAll('[data-id]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = parseInt(btn.dataset.id);
+                    const post = POSTS.find(p => p.id === id);
+                    if (!post) return;
+                    if (!confirm('¿Eliminar "' + post.title + '"?')) return;
+                    const postUrl = post.url;
+                    const idx = POSTS.indexOf(post);
+                    POSTS.splice(idx, 1);
+                    renderPostList(); renderCards();
+                    setMsg('listMsg', '⟳ Eliminando post...', 'load');
+                    const tok = _tok || document.getElementById('globalTok').value.trim();
+                    if (!tok) { setMsg('listMsg', 'Token requerido.', 'err'); return; }
+                    try {
+                        // Delete post file
+                        await deleteFile(tok, postUrl, 'Delete: ' + post.title);
+                        // Update index.html
+                        await uploadIndex(tok, 'Remove post: ' + post.title);
+                        setMsg('listMsg', '✓ Post eliminado. Sitio actualizado en ~30s.', 'ok');
+                    } catch (e) {
+                        setMsg('listMsg', '✗ Error: ' + e.message, 'err');
+                    }
+                });
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // ADMIN — PUBLICAR POST
+        // ═══════════════════════════════════════════════════════════
+        document.getElementById('pubBtn').addEventListener('click', async () => {
+            const tok = _tok || document.getElementById('globalTok').value.trim();
+            const title = document.getElementById('ptitle').value.trim();
+            const date = document.getElementById('pdate').value.trim();
+            const cat = document.getElementById('pcat').value;
+            const desc = document.getElementById('pdesc').value.trim();
+            const tgr = document.getElementById('ptags').value.trim();
+            const body = document.getElementById('pbody').value.trim();
+            if (!tok) { setMsg('postMsg', 'Pegá tu GitHub Token arriba.', 'err'); return; }
+            if (!title || !desc || !body) { setMsg('postMsg', 'Completá título, descripción y contenido.', 'err'); return; }
+            setMsg('postMsg', '⟳ Publicando...', 'load');
+            document.getElementById('pubBtn').disabled = true;
+            try {
+                const tags = tgr ? tgr.split(',').map(t => t.trim()).filter(Boolean) : [];
+                const slug = slugify(title);
+                const postUrl = 'posts/' + slug + '.html';
+                const post = {
+                    id: Date.now(),
+                    cat,
+                    title,
+                    date: date || new Date().toISOString().slice(0, 10),
+                    desc,
+                    tags,
+                    url: postUrl
+                };
+
+                // Generate post HTML
+                const bodyHTML = renderMD(body);
+                const postHTML = generatePostHTML(post, bodyHTML);
+
+                // Push post file to GitHub
+                await uploadFile(tok, postUrl, postHTML, 'Add post: ' + title);
+
+                // Add to POSTS array and update index.html
+                POSTS.unshift(post);
+                renderCards();
+                await uploadIndex(tok, 'Update index: add ' + title);
+
+                setMsg('postMsg', '✓ Post publicado. El sitio se actualizará en ~30 segundos.', 'ok');
+                ['ptitle', 'pdesc', 'ptags', 'pbody'].forEach(id => { document.getElementById(id).value = ''; });
+                document.getElementById('pdate').value = new Date().toISOString().slice(0, 10);
+            } catch (e) {
+                setMsg('postMsg', '✗ Error: ' + e.message, 'err');
+            } finally { document.getElementById('pubBtn').disabled = false; }
+        });
+
+        // ═══════════════════════════════════════════════════════════
+        // GITHUB API HELPERS
+        // ═══════════════════════════════════════════════════════════
+        const REPO = 'joacosilvagni/joacosilvagni.github.io';
+        const API_BASE = 'https://api.github.com/repos/' + REPO + '/contents/';
+
+        function ghHeaders(tok) {
+            return { 'Authorization': 'token ' + tok, 'Content-Type': 'application/json' };
+        }
+
+        async function uploadFile(tok, path, content, msg) {
+            const url = API_BASE + path;
+            const headers = ghHeaders(tok);
+            // Check if file exists (to get sha)
+            let sha = null;
+            try {
+                const getR = await fetch(url, { headers });
+                if (getR.ok) {
+                    const data = await getR.json();
+                    sha = data.sha;
+                }
+            } catch (e) { /* file doesn't exist */ }
+            const body = { message: msg, content: btoa(unescape(encodeURIComponent(content))) };
+            if (sha) body.sha = sha;
+            const putR = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+            if (!putR.ok) { const e = await putR.json(); throw new Error(e.message || 'Error al subir ' + path); }
+        }
+
+        async function deleteFile(tok, path, msg) {
+            const url = API_BASE + path;
+            const headers = ghHeaders(tok);
+            try {
+                const getR = await fetch(url, { headers });
+                if (!getR.ok) return; // file doesn't exist
+                const data = await getR.json();
+                const delR = await fetch(url, {
+                    method: 'DELETE',
+                    headers,
+                    body: JSON.stringify({ message: msg, sha: data.sha })
+                });
+                if (!delR.ok) { const e = await delR.json(); throw new Error(e.message); }
+            } catch (e) { console.warn('Delete failed:', e); }
+        }
+
+        async function uploadIndex(tok, msg) {
+            // Read current index.html, replace POSTS and CATEGORIES arrays, push
+            const url = API_BASE + 'index.html';
+            const headers = ghHeaders(tok);
+            const getR = await fetch(url, { headers });
+            if (!getR.ok) throw new Error('No se pudo leer index.html del repo');
+            const getData = await getR.json();
+            const sha = getData.sha;
+            const currentHTML = decodeURIComponent(escape(atob(getData.content.replace(/\n/g, ''))));
+
+            // Replace CATEGORIES
+            const catStart = 'const CATEGORIES = [';
+            const catEnd = '];\n\n        // ═══════════════════════════════════════════════════════════\n        // POSTS';
+            const i1 = currentHTML.indexOf(catStart);
+            const i1e = currentHTML.indexOf(catEnd);
+            if (i1 === -1 || i1e === -1) throw new Error('Marcador CATEGORIES no encontrado');
+
+            // Replace POSTS
+            const postStart = 'const POSTS = [';
+            const postEnd = '];\n\n        // ═══════════════════════════════════════════════════════════\n        // UTILS';
+            const i2 = currentHTML.indexOf(postStart, i1e);
+            const i2e = currentHTML.indexOf(postEnd, i2);
+            if (i2 === -1 || i2e === -1) throw new Error('Marcador POSTS no encontrado');
+
+            const newCats = JSON.stringify(CATEGORIES, null, 12).replace(/\n/g, '\n            ');
+            const newPosts = JSON.stringify(POSTS, null, 12).replace(/\n/g, '\n            ');
+
+            const newHTML = currentHTML.slice(0, i1) +
+                'const CATEGORIES = ' + newCats + catEnd +
+                currentHTML.slice(i1e + catEnd.length, i2) +
+                'const POSTS = ' + newPosts + postEnd +
+                currentHTML.slice(i2e + postEnd.length);
+
+            const body = { message: msg, content: btoa(unescape(encodeURIComponent(newHTML))), sha };
+            const putR = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+            if (!putR.ok) { const e = await putR.json(); throw new Error(e.message || 'Error al subir index.html'); }
+        }
+
+        function setMsg(id, m, t) {
+            const el = document.getElementById(id);
+            el.textContent = m;
+            el.className = 'msg ' + t;
+        }
+    </script>
+
+    <!-- ADMIN BUTTON -->
+    <button class="adm-btn" id="admBtn" title="Panel admin">⚙</button>
+
+    <!-- ADMIN OVERLAY -->
+    <div class="adm-ov" id="admOv">
+        <div class="adm-inner">
+
+            <!-- TOKEN GLOBAL -->
+            <div class="tok-section">
+                <div class="tok-label">GitHub Token (scope: repo) — se usa en todas las acciones</div>
+                <div class="tok-row">
+                    <input type="password" id="globalTok" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+                    <button class="btn btn-sm btn-ghost" onclick="saveTok()">Guardar</button>
+                </div>
+                <div class="tok-ok" id="tokOk" style="display:none">✓ Token guardado para esta sesión</div>
+                <div class="tnote" style="margin-top:.4rem">Generalo en <a
+                        href="https://github.com/settings/tokens/new?scopes=repo"
+                        target="_blank">github.com/settings/tokens</a> → scope <strong>repo</strong></div>
+            </div>
+
+            <!-- PANEL PRINCIPAL -->
+            <div class="adm-panel">
+                <div class="adm-hdr">
+                    <span class="adm-ttl">// Panel de administración</span>
+                    <button class="adm-x" id="admX">✕</button>
+                </div>
+
+                <!-- TABS -->
+                <div class="adm-tabs">
+                    <button class="adm-tab active" data-tab="tab-post">✏ Nuevo Post</button>
+                    <button class="adm-tab" data-tab="tab-cats">🏷 Categorías</button>
+                    <button class="adm-tab" data-tab="tab-posts">📋 Posts</button>
+                </div>
+
+                <div class="adm-body">
+
+                    <!-- TAB: NUEVO POST -->
+                    <div class="tab-content active" id="tab-post">
+                        <div class="fr">
+                            <div class="f"><label>Título</label><input type="text" id="ptitle"
+                                    placeholder="HTB MáquinaXYZ — Técnica explotada"></div>
+                            <div class="f"><label>Fecha</label><input type="text" id="pdate" placeholder="2025-04-20">
+                            </div>
+                        </div>
+                        <div class="fr">
+                            <div class="f">
+                                <label>Categoría</label>
+                                <select id="pcat"></select>
+                            </div>
+                            <div class="f"><label>Tags (separados por coma)</label><input type="text" id="ptags"
+                                    placeholder="LFI, PrivEsc, JWT"></div>
+                        </div>
+                        <div class="f"><label>Descripción / resumen</label><textarea id="pdesc" rows="2"
+                                placeholder="Breve descripción del post..."></textarea></div>
+                        <div class="f">
+                            <label>Contenido completo (Markdown)</label>
+                            <textarea id="pbody" rows="20"
+                                placeholder="## Introducción&#10;&#10;Escribí el writeup acá...&#10;&#10;### Enumeración inicial&#10;&#10;```&#10;nmap -sCV -p- 10.10.10.x&#10;```&#10;&#10;**Hallazgo:** puerto 80 abierto.&#10;&#10;- Puerto 22: SSH&#10;- Puerto 80: HTTP&#10;&#10;> Tip importante&#10;&#10;---&#10;&#10;## Explotación"></textarea>
+                            <div class="hint"><code>## H2</code> · <code>### H3</code> · <code>**negrita**</code> ·
+                                <code>`inline`</code> · <code>```bloque```</code> · <code>- lista</code> ·
+                                <code>&gt; cita</code> · <code>---</code></div>
+                        </div>
+                        <div class="adm-acts">
+                            <button class="btn btn-primary" id="pubBtn">Publicar post →</button>
+                            <button class="btn btn-ghost" onclick="closeAdmin()">Cancelar</button>
+                        </div>
+                        <div class="msg" id="postMsg"></div>
+                    </div>
+
+                    <!-- TAB: CATEGORÍAS -->
+                    <div class="tab-content" id="tab-cats">
+                        <div class="cat-list" id="cat-list"></div>
+                        <hr class="adm-sep">
+                        <div style="font-family:var(--mono);font-size:.68rem;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem">
+                            + Nueva categoría</div>
+                        <div class="fr">
+                            <div class="f"><label>ID (sin espacios, ej: bug-bounty)</label><input type="text"
+                                    id="cat-id" placeholder="bug-bounty"></div>
+                            <div class="f"><label>Nombre visible</label><input type="text" id="cat-name-input"
+                                    placeholder="Bug Bounty"></div>
+                        </div>
+                        <div class="f">
+                            <label>Color</label>
+                            <div class="color-row" id="color-picker"></div>
+                            <input type="text" id="cat-color" placeholder="#00e5ff"
+                                style="margin-top:.5rem;width:120px" />
+                        </div>
+                        <div style="margin-top:.5rem;font-family:var(--mono);font-size:.7rem;color:var(--text-dim)">
+                            Preview: <span id="cat-preview" class="cat-badge" style="margin-left:.5rem">Nombre</span>
+                        </div>
+                        <div class="adm-acts">
+                            <button class="btn btn-primary btn-sm" id="addCatBtn">Crear categoría →</button>
+                        </div>
+                        <div class="msg" id="catMsg"></div>
+                    </div>
+
+                    <!-- TAB: POSTS -->
+                    <div class="tab-content" id="tab-posts">
+                        <div style="font-family:var(--mono);font-size:.7rem;color:var(--text-dim);margin-bottom:1rem">
+                            Posts publicados — podés eliminar cualquiera.</div>
+                        <div class="post-list" id="post-list"></div>
+                        <div class="msg" id="listMsg"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

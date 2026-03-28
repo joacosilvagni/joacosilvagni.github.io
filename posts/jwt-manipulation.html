@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Token Manipulation: Explotando Vulnerabilidades en la Autenticación Web — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(0,229,255,.1);color:#00e5ff;border:1px solid rgba(0,229,255,.25)">Web Security</span>
+                    <span class="pdate">2025-04-03</span>
+                </div>
+                <h1 class="ph1">JWT Token Manipulation: Explotando Vulnerabilidades en la Autenticación Web</h1>
+                <p class="psum">Análisis completo de técnicas de ataque sobre JWT: fuerza bruta de claves HS256, confusión de algoritmos RS256→HS256, inyección en el campo kid, none algorithm y más.</p>
+                <div class="ptr">
+                    <span class="tag">JWT</span>
+                    <span class="tag">Authentication</span>
+                    <span class="tag">Web Security</span>
+                    <span class="tag">Red Team</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <p>Los JSON Web Tokens (JWT) son una tecnología ampliamente adoptada para llevar a cabo tareas de autenticación y autorización en entornos web modernos. Gracias a su capacidad de encapsular datos de manera compacta, auto-contenida y verificable, estos tokens facilitan significativamente la gestión de sesiones de usuario, el control de acceso a recursos protegidos y la implementación de sistemas sin estado (stateless). Sin embargo, esta conveniencia no está exenta de riesgos. Cuando los JWT son implementados sin las debidas medidas de seguridad, pueden convertirse en un punto crítico de vulnerabilidad. Este artículo se centra en analizar en profundidad las principales técnicas de manipulación y explotación de JWTs utilizadas por profesionales del Red Team, así como en describir metodologías de detección, herramientas especializadas y ejemplos prácticos basados en escenarios reales.</p>
+
+                <h2>¿Cómo Detectar un JWT en una Aplicación Web?</h2>
+
+                <p>Antes de poder explotar un JWT, es fundamental confirmar su existencia y comprender su contexto dentro de la aplicación.</p>
+
+                <h3>1. Inspeccionar Cookies del Navegador</h3>
+
+                <p>Utilizar las herramientas de desarrollo del navegador (DevTools), accediendo a la pestaña Application → Storage → Cookies, donde es posible identificar valores que aparentan tener la estructura típica de un JWT (tres segmentos separados por puntos).</p>
+
+                <code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvYWNvIiwicm9sZSI6ImFkbWluIn0.W5_V9IuCfl...</code>
+
+                <p>Esta estructura revela un encabezado, un payload y una firma, codificados en Base64URL.</p>
+
+                <h3>2. Revisar las Cabeceras HTTP</h3>
+
+                <p>Muchos JWT se transmiten a través del encabezado Authorization, bajo el esquema Bearer:</p>
+
+                <code>curl -i https://victima.com/protected -H "Authorization: Bearer TOKEN_AQUÍ"</code>
+
+                <p>Este enfoque es común en APIs RESTful.</p>
+
+                <h3>3. Verificar el Código JavaScript del Cliente</h3>
+
+                <p>JWTs también pueden almacenarse en el localStorage o sessionStorage:</p>
+
+<pre><code>console.log(localStorage.getItem("token"));
+console.log(sessionStorage.getItem("jwt"));</code></pre>
+
+                <h2>Caso Práctico: Explotación del Campo kid en un JWT RS256</h2>
+
+                <p>Durante un escenario de laboratorio con una app vulnerable tipo CTF, identificamos un token JWT firmado con el algoritmo RS256. Al inspeccionar los campos del JWT en jwt.io, observamos dos elementos clave: un campo admin_cap con valor 0, y un kid con una ruta local.</p>
+
+                <p>Nuestra hipótesis fue que el servidor cargaba la clave pública desde una ruta determinada por el kid, sin validación estricta. Esto nos permitió ejecutar una inyección de kid para que apuntara a una clave maliciosa generada por nosotros.</p>
+
+                <h3>Pasos del ataque:</h3>
+
+                <p>1. Generamos una clave privada RSA:</p>
+
+                <code>openssl genrsa -out privKey.key 2048</code>
+
+                <p>2. Modificamos el token JWT:</p>
+                <ul>
+                    <li>Cambiamos el campo admin_cap de false a true.</li>
+                    <li>Reemplazamos kid por una URL controlada: <code>http://&lt;IP&gt;:7070/privKey.key</code></li>
+                    <li>Firmamos el nuevo token en jwt.io usando nuestra clave privada.</li>
+                </ul>
+
+                <p>3. Levantamos un servidor local para servir la clave pública:</p>
+
+                <code>python3 -m http.server 7070</code>
+
+                <p>4. Insertamos el JWT modificado con Cookie Editor y recargamos la página.</p>
+
+                <h2>Técnicas de Manipulación y Ataque de JWT (Red Team)</h2>
+
+                <h3>1. Decodificación y Análisis de Claims</h3>
+
+                <p>Al estar codificados en Base64URL, los JWT permiten una lectura directa de sus campos sin necesidad de la clave secreta. Entre los campos más interesantes: username, admin, role, scope, exp, entre otros.</p>
+
+<pre><code>import jwt
+print(jwt.decode(token, options={"verify_signature": False}))</code></pre>
+
+                <p>Herramientas: jwt_tool.py, JWTInspector, plugins de Burp Suite.</p>
+
+                <h3>2. Fuerza Bruta de Claves (HS256)</h3>
+
+                <p>Cuando el algoritmo es HS256 (clave simétrica), una clave débil puede ser recuperada mediante ataques de diccionario:</p>
+
+<pre><code>python3 jwt-cracker.py -t TOKEN_AQUÍ -w rockyou.txt
+john --wordlist=rockyou.txt --format=HMAC-SHA256 jwt_hash.txt</code></pre>
+
+                <h3>3. Confusión de Algoritmo (RS256 → HS256)</h3>
+
+                <p>El atacante modifica el campo alg de RS256 a HS256, y engaña al servidor para que acepte la clave pública como si fuera una clave secreta:</p>
+
+<pre><code>{ "alg": "HS256", "typ": "JWT" }
+
+new_token = jwt.encode({"admin": True}, open("public.pem").read(), algorithm="HS256")</code></pre>
+
+                <h3>4. Inyección en el Campo kid</h3>
+
+                <p>El campo kid indica qué clave usar para verificar la firma. Si el backend lo usa dinámicamente:</p>
+
+<pre><code>{ "alg": "RS256", "kid": "../../../../tmp/key" }
+
+ssh-keygen -t rsa -b 4096 -m PEM -f privKey.key</code></pre>
+
+                <h3>5. Ataques con None Algorithm</h3>
+
+                <p>Algunas implementaciones defectuosas aceptan tokens cuyo algoritmo es none:</p>
+
+                <code>{ "alg": "none", "typ": "JWT" }</code>
+
+                <p>Eliminar la firma del token y modificar libremente los claims.</p>
+
+                <h3>6. Timing Attack y Oracle Side-Channel</h3>
+
+                <p>Si el servidor realiza la validación de firmas carácter por carácter, se puede usar un ataque de canal lateral basado en tiempo para deducir la firma correcta. Medir diferencias en tiempos de respuesta para cada intento.</p>
+
+                <h3>7. Replay y Session Fixation</h3>
+
+                <p>Los JWT robados pueden ser reutilizados si no existen mecanismos adecuados de invalidación. Usar un token capturado (mediante XSS o tráfico sin HTTPS) para autenticarse en múltiples sesiones.</p>
+
+                <h3>8. JWTs en Subdominios</h3>
+
+                <p>Cuando múltiples subdominios (api.victima.com y admin.victima.com) comparten el mismo dominio padre, y los JWT son válidos entre ellos, se puede explotar esa relación para escalar privilegios lateralmente.</p>
+
+                <h2>Herramientas Clave para JWT Attacks</h2>
+
+                <ul>
+                    <li><strong>jwt_tool.py</strong> — Swiss Army Knife para manipulación y análisis de JWTs.</li>
+                    <li><strong>jwt-cracker</strong> — fuerza bruta de claves HS256.</li>
+                    <li><strong>Burp Suite con plugins de JWT</strong> — análisis dinámico en entornos web.</li>
+                    <li><strong>Postman con extensiones JWT</strong> para testeo de APIs.</li>
+                    <li><strong>CyberChef</strong> — para decodificación, codificación y análisis visual.</li>
+                </ul>
+
+                <h2>Conclusión</h2>
+
+                <p>Aunque los JSON Web Tokens son una solución práctica y escalable para la gestión de sesiones y control de acceso, su seguridad depende en gran medida de una implementación rigurosa y cuidadosa. Comprender estos ataques es esencial para ofensores que buscan evaluar aplicaciones web modernas y también para defensores que deben diseñar sistemas más robustos.</p>
+            </div>
+        </div>
+    </div>
+    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+</body>
+</html>
