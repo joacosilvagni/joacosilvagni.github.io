@@ -206,6 +206,115 @@
         <span>Built with 🖤 · GitHub Pages</span>
     </footer>
 
+    <!-- ADMIN BUTTON -->
+    <button class="adm-btn" id="admBtn" title="Panel admin">⚙</button>
+
+    <!-- ADMIN OVERLAY -->
+    <div class="adm-ov" id="admOv">
+        <div class="adm-inner">
+
+            <!-- TOKEN GLOBAL -->
+            <div class="tok-section">
+                <div class="tok-label">GitHub Token (scope: repo) — se usa en todas las acciones</div>
+                <div class="tok-row">
+                    <input type="password" id="globalTok" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+                    <button class="btn btn-sm btn-ghost" onclick="saveTok()">Guardar</button>
+                </div>
+                <div class="tok-ok" id="tokOk" style="display:none">✓ Token guardado para esta sesión</div>
+                <div class="tnote" style="margin-top:.4rem">Generalo en <a
+                        href="https://github.com/settings/tokens/new?scopes=repo"
+                        target="_blank">github.com/settings/tokens</a> → scope <strong>repo</strong></div>
+            </div>
+
+            <!-- PANEL PRINCIPAL -->
+            <div class="adm-panel">
+                <div class="adm-hdr">
+                    <span class="adm-ttl">// Panel de administración</span>
+                    <button class="adm-x" id="admX">✕</button>
+                </div>
+
+                <!-- TABS -->
+                <div class="adm-tabs">
+                    <button class="adm-tab active" data-tab="tab-post">✏ Nuevo Post</button>
+                    <button class="adm-tab" data-tab="tab-cats">🏷 Categorías</button>
+                    <button class="adm-tab" data-tab="tab-posts">📋 Posts</button>
+                </div>
+
+                <div class="adm-body">
+
+                    <!-- TAB: NUEVO POST -->
+                    <div class="tab-content active" id="tab-post">
+                        <div class="fr">
+                            <div class="f"><label>Título</label><input type="text" id="ptitle"
+                                    placeholder="HTB MáquinaXYZ — Técnica explotada"></div>
+                            <div class="f"><label>Fecha</label><input type="text" id="pdate" placeholder="2025-04-20">
+                            </div>
+                        </div>
+                        <div class="fr">
+                            <div class="f">
+                                <label>Categoría</label>
+                                <select id="pcat"></select>
+                            </div>
+                            <div class="f"><label>Tags (separados por coma)</label><input type="text" id="ptags"
+                                    placeholder="LFI, PrivEsc, JWT"></div>
+                        </div>
+                        <div class="f"><label>Descripción / resumen</label><textarea id="pdesc" rows="2"
+                                placeholder="Breve descripción del post..."></textarea></div>
+                        <div class="f">
+                            <label>Contenido completo (Markdown)</label>
+                            <textarea id="pbody" rows="20"
+                                placeholder="## Introducción&#10;&#10;Escribí el writeup acá...&#10;&#10;### Enumeración inicial&#10;&#10;```&#10;nmap -sCV -p- 10.10.10.x&#10;```&#10;&#10;**Hallazgo:** puerto 80 abierto.&#10;&#10;- Puerto 22: SSH&#10;- Puerto 80: HTTP&#10;&#10;> Tip importante&#10;&#10;---&#10;&#10;## Explotación"></textarea>
+                            <div class="hint"><code>## H2</code> · <code>### H3</code> · <code>**negrita**</code> ·
+                                <code>`inline`</code> · <code>```bloque```</code> · <code>- lista</code> ·
+                                <code>&gt; cita</code> · <code>---</code></div>
+                        </div>
+                        <div class="adm-acts">
+                            <button class="btn btn-primary" id="pubBtn">Publicar post →</button>
+                            <button class="btn btn-ghost" onclick="closeAdmin()">Cancelar</button>
+                        </div>
+                        <div class="msg" id="postMsg"></div>
+                    </div>
+
+                    <!-- TAB: CATEGORÍAS -->
+                    <div class="tab-content" id="tab-cats">
+                        <div class="cat-list" id="cat-list"></div>
+                        <hr class="adm-sep">
+                        <div style="font-family:var(--mono);font-size:.68rem;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem">
+                            + Nueva categoría</div>
+                        <div class="fr">
+                            <div class="f"><label>ID (sin espacios, ej: bug-bounty)</label><input type="text"
+                                    id="cat-id" placeholder="bug-bounty"></div>
+                            <div class="f"><label>Nombre visible</label><input type="text" id="cat-name-input"
+                                    placeholder="Bug Bounty"></div>
+                        </div>
+                        <div class="f">
+                            <label>Color</label>
+                            <div class="color-row" id="color-picker"></div>
+                            <input type="text" id="cat-color" placeholder="#00e5ff"
+                                style="margin-top:.5rem;width:120px" />
+                        </div>
+                        <div style="margin-top:.5rem;font-family:var(--mono);font-size:.7rem;color:var(--text-dim)">
+                            Preview: <span id="cat-preview" class="cat-badge" style="margin-left:.5rem">Nombre</span>
+                        </div>
+                        <div class="adm-acts">
+                            <button class="btn btn-primary btn-sm" id="addCatBtn">Crear categoría →</button>
+                        </div>
+                        <div class="msg" id="catMsg"></div>
+                    </div>
+
+                    <!-- TAB: POSTS -->
+                    <div class="tab-content" id="tab-posts">
+                        <div style="font-family:var(--mono);font-size:.7rem;color:var(--text-dim);margin-bottom:1rem">
+                            Posts publicados — podés eliminar cualquiera.</div>
+                        <div class="post-list" id="post-list"></div>
+                        <div class="msg" id="listMsg"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ═══════════════════════════════════════════════════════════
         // CATEGORÍAS
@@ -746,114 +855,7 @@
         }
     </script>
 
-    <!-- ADMIN BUTTON -->
-    <button class="adm-btn" id="admBtn" title="Panel admin">⚙</button>
 
-    <!-- ADMIN OVERLAY -->
-    <div class="adm-ov" id="admOv">
-        <div class="adm-inner">
-
-            <!-- TOKEN GLOBAL -->
-            <div class="tok-section">
-                <div class="tok-label">GitHub Token (scope: repo) — se usa en todas las acciones</div>
-                <div class="tok-row">
-                    <input type="password" id="globalTok" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
-                    <button class="btn btn-sm btn-ghost" onclick="saveTok()">Guardar</button>
-                </div>
-                <div class="tok-ok" id="tokOk" style="display:none">✓ Token guardado para esta sesión</div>
-                <div class="tnote" style="margin-top:.4rem">Generalo en <a
-                        href="https://github.com/settings/tokens/new?scopes=repo"
-                        target="_blank">github.com/settings/tokens</a> → scope <strong>repo</strong></div>
-            </div>
-
-            <!-- PANEL PRINCIPAL -->
-            <div class="adm-panel">
-                <div class="adm-hdr">
-                    <span class="adm-ttl">// Panel de administración</span>
-                    <button class="adm-x" id="admX">✕</button>
-                </div>
-
-                <!-- TABS -->
-                <div class="adm-tabs">
-                    <button class="adm-tab active" data-tab="tab-post">✏ Nuevo Post</button>
-                    <button class="adm-tab" data-tab="tab-cats">🏷 Categorías</button>
-                    <button class="adm-tab" data-tab="tab-posts">📋 Posts</button>
-                </div>
-
-                <div class="adm-body">
-
-                    <!-- TAB: NUEVO POST -->
-                    <div class="tab-content active" id="tab-post">
-                        <div class="fr">
-                            <div class="f"><label>Título</label><input type="text" id="ptitle"
-                                    placeholder="HTB MáquinaXYZ — Técnica explotada"></div>
-                            <div class="f"><label>Fecha</label><input type="text" id="pdate" placeholder="2025-04-20">
-                            </div>
-                        </div>
-                        <div class="fr">
-                            <div class="f">
-                                <label>Categoría</label>
-                                <select id="pcat"></select>
-                            </div>
-                            <div class="f"><label>Tags (separados por coma)</label><input type="text" id="ptags"
-                                    placeholder="LFI, PrivEsc, JWT"></div>
-                        </div>
-                        <div class="f"><label>Descripción / resumen</label><textarea id="pdesc" rows="2"
-                                placeholder="Breve descripción del post..."></textarea></div>
-                        <div class="f">
-                            <label>Contenido completo (Markdown)</label>
-                            <textarea id="pbody" rows="20"
-                                placeholder="## Introducción&#10;&#10;Escribí el writeup acá...&#10;&#10;### Enumeración inicial&#10;&#10;```&#10;nmap -sCV -p- 10.10.10.x&#10;```&#10;&#10;**Hallazgo:** puerto 80 abierto.&#10;&#10;- Puerto 22: SSH&#10;- Puerto 80: HTTP&#10;&#10;> Tip importante&#10;&#10;---&#10;&#10;## Explotación"></textarea>
-                            <div class="hint"><code>## H2</code> · <code>### H3</code> · <code>**negrita**</code> ·
-                                <code>`inline`</code> · <code>```bloque```</code> · <code>- lista</code> ·
-                                <code>&gt; cita</code> · <code>---</code></div>
-                        </div>
-                        <div class="adm-acts">
-                            <button class="btn btn-primary" id="pubBtn">Publicar post →</button>
-                            <button class="btn btn-ghost" onclick="closeAdmin()">Cancelar</button>
-                        </div>
-                        <div class="msg" id="postMsg"></div>
-                    </div>
-
-                    <!-- TAB: CATEGORÍAS -->
-                    <div class="tab-content" id="tab-cats">
-                        <div class="cat-list" id="cat-list"></div>
-                        <hr class="adm-sep">
-                        <div style="font-family:var(--mono);font-size:.68rem;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem">
-                            + Nueva categoría</div>
-                        <div class="fr">
-                            <div class="f"><label>ID (sin espacios, ej: bug-bounty)</label><input type="text"
-                                    id="cat-id" placeholder="bug-bounty"></div>
-                            <div class="f"><label>Nombre visible</label><input type="text" id="cat-name-input"
-                                    placeholder="Bug Bounty"></div>
-                        </div>
-                        <div class="f">
-                            <label>Color</label>
-                            <div class="color-row" id="color-picker"></div>
-                            <input type="text" id="cat-color" placeholder="#00e5ff"
-                                style="margin-top:.5rem;width:120px" />
-                        </div>
-                        <div style="margin-top:.5rem;font-family:var(--mono);font-size:.7rem;color:var(--text-dim)">
-                            Preview: <span id="cat-preview" class="cat-badge" style="margin-left:.5rem">Nombre</span>
-                        </div>
-                        <div class="adm-acts">
-                            <button class="btn btn-primary btn-sm" id="addCatBtn">Crear categoría →</button>
-                        </div>
-                        <div class="msg" id="catMsg"></div>
-                    </div>
-
-                    <!-- TAB: POSTS -->
-                    <div class="tab-content" id="tab-posts">
-                        <div style="font-family:var(--mono);font-size:.7rem;color:var(--text-dim);margin-bottom:1rem">
-                            Posts publicados — podés eliminar cualquiera.</div>
-                        <div class="post-list" id="post-list"></div>
-                        <div class="msg" id="listMsg"></div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 
 </html>
