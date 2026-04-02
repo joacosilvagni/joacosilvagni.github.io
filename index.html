@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Joaquin Silvagni — Pentester</title>
+    <title>Joaquin Silvagni — Seguridad Informática</title>
     <meta name="description" content="Portfolio de ciberseguridad de Joaquin Silvagni (zSodex). Pentester certificado eJPT, write-ups de HackTheBox, investigación en seguridad web y herramientas ofensivas.">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
@@ -14,7 +14,7 @@
 <body>
 
     <nav>
-        <a class="nav-logo" href="index.html"><span>~/</span>zsodex</a>
+        <a class="nav-logo" href="index.html">Joaquin Silvagni</a>
         <ul class="nav-links">
             <li><a href="#ejpt">Cert</a></li>
             <li><a href="#blog">Blog</a></li>
@@ -46,25 +46,6 @@
             <div class="hero-cta fi">
                 <a class="btn btn-primary" href="#blog">Ver Write-ups →</a>
                 <a href="https://github.com/joacosilvagni" target="_blank" class="btn btn-ghost">GitHub ↗</a>
-            </div>
-        </div>
-        <div class="terminal-card fi">
-            <div class="terminal-bar">
-                <div class="dot dot-r"></div>
-                <div class="dot dot-y"></div>
-                <div class="dot dot-g"></div>
-                <span class="terminal-title">zsodex@kali — whoami</span>
-            </div>
-            <div class="terminal-body">
-                <div><span class="t-prompt">❯</span> <span class="t-cmd">cat profile.json</span></div>
-                <div class="t-out">{</div>
-                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"name"</span>: <span class="t-str">"Joaquin Silvagni"</span>,</div>
-                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"alias"</span>: <span class="t-str">"zSodex"</span>,</div>
-                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"role"</span>: <span class="t-str">"Pentester"</span>,</div>
-                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"cert"</span>: <span class="t-str">"eJPT"</span>,</div>
-                <div class="t-out">&nbsp;&nbsp;<span class="t-val">"status"</span>: <span class="t-str">"open to work"</span></div>
-                <div class="t-out">}</div>
-                <div style="margin-top:.75rem"><span class="t-prompt">❯</span> <span class="t-cursor"></span></div>
             </div>
         </div>
     </div>
@@ -202,8 +183,8 @@
     </div>
 
     <footer>
-        <span>© 2025 <span class="fa">Joaquin Silvagni</span> · zSodex</span>
-        <span>Built with 🖤 · GitHub Pages</span>
+        <span>© 2025 <span class="fa">Joaquin Silvagni</span></span>
+        <span>GitHub Pages</span>
     </footer>
 
     <!-- ADMIN BUTTON -->
@@ -321,11 +302,11 @@
         // ═══════════════════════════════════════════════════════════
         const CATEGORIES = [
             { id: "htb", name: "HackTheBox", color: "#a3e635" },
-            { id: "web", name: "Web Security", color: "#00e5ff" },
-            { id: "tool", name: "Tool / Malware", color: "#ff3c6e" },
+            { id: "web", name: "Web Security", color: "#60a5fa" },
+            { id: "portswigger", name: "PortSwigger Labs", color: "#fb923c" },
+            { id: "tool", name: "Herramientas", color: "#f87171" },
             { id: "theory", name: "Teoría / OWASP", color: "#94a3b8" },
-            { id: "bugbounty", name: "Bug Bounty", color: "#fb923c" },
-            { id: "network", name: "Network", color: "#818cf8" }
+            { id: "bugbounty", name: "Bug Bounty", color: "#818cf8" }
         ];
 
         // ═══════════════════════════════════════════════════════════
@@ -395,6 +376,22 @@
                 desc: "Framework de post-explotación con C2 sobre Discord, payload cifrado AES-256 ejecutado en memoria (fileless), evasión anti-VM/sandbox, keylogger en tiempo real y persistencia automatizada.",
                 tags: ["C2", "AES-256", "Fileless", "Anti-AV", "Discord"],
                 url: "posts/darkord.html"
+            },
+            {
+                id: 9, cat: "portswigger",
+                title: "API Testing — Reconocimiento, Endpoints Ocultos y Mass Assignment",
+                date: "2025-04-20",
+                desc: "Metodología completa para auditar APIs REST: descubrimiento de documentación, fuzzing de endpoints y métodos HTTP, cambio de Content-Type y explotación de Mass Assignment con laboratorios resueltos de PortSwigger.",
+                tags: ["API Testing", "Mass Assignment", "Burp Suite", "PortSwigger"],
+                url: "posts/portswigger-api-testing.html"
+            },
+            {
+                id: 10, cat: "portswigger",
+                title: "Business Logic Vulnerabilities — Fallas de Diseño y 2FA Broken Logic",
+                date: "2025-04-20",
+                desc: "Análisis de vulnerabilidades por fallos en la lógica de negocio: exceso de confianza en controles del cliente, manipulación de precios en checkout y explotación de 2FA mal implementado mediante fuerza bruta.",
+                tags: ["Business Logic", "2FA", "Client-Side", "PortSwigger"],
+                url: "posts/portswigger-business-logic.html"
             }
         ];
 

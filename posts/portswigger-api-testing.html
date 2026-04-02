@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Testing — Reconocimiento, Endpoints Ocultos y Mass Assignment — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html">Joaquin Silvagni</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(251,146,60,.1);color:#fb923c;border:1px solid rgba(251,146,60,.25)">PortSwigger Labs</span>
+                    <span class="pdate">2025-04-20</span>
+                </div>
+                <h1 class="ph1">API Testing — Reconocimiento, Endpoints Ocultos y Mass Assignment</h1>
+                <p class="psum">Metodología completa para auditar APIs REST: descubrimiento de documentación, fuzzing de endpoints y métodos HTTP, cambio de Content-Type y explotación de Mass Assignment. Incluye resolución de laboratorios de PortSwigger Web Security Academy.</p>
+                <div class="ptr">
+                    <span class="tag">API Testing</span>
+                    <span class="tag">Mass Assignment</span>
+                    <span class="tag">Burp Suite</span>
+                    <span class="tag">PortSwigger</span>
+                </div>
+            </div>
+            <div class="post-content">
+
+                <h2>Identificación de API Endpoints</h2>
+                <p>Lo primero es identificar los API endpoints. Por ejemplo, si hay alguna petición que se vea así:</p>
+                <pre><code>GET /api/books HTTP/1.1
+Host: example.com</code></pre>
+                <p>Esto es una interacción con la API. Si otra petición se ve así:</p>
+                <pre><code>/api/books/mistery</code></pre>
+                <p>Ya se ve la superficie de interacción con la API.</p>
+                <p>Se interpreta de la siguiente forma:</p>
+                <ul>
+                    <li><strong>Host: example.com</strong> → El servidor al que se está conectando es example.com</li>
+                    <li><strong>GET /api/books</strong> → La ruta (path) que se está solicitando en ese servidor es /api/books</li>
+                </ul>
+
+                <h2>API Data Input</h2>
+                <ul>
+                    <li>Una vez identificados los endpoints, hay que verificar cómo interactuar con ellos y qué datos procesan.</li>
+                    <li>Qué tipos de peticiones acepta la API.</li>
+                </ul>
+                <p>Ejemplo:</p>
+                <pre><code>GET /api/books       → para listar libros
+POST /api/books      → para crear un libro nuevo
+PUT /api/books/123   → para actualizar todo el libro
+PATCH /api/books/123 → para actualizar solo un campo
+DELETE /api/books/123 → para borrar</code></pre>
+                <p><strong>Authentication</strong> — ¿Cómo se autentica esta API?</p>
+                <ul>
+                    <li>¿Necesita un <strong>token JWT</strong> en el header <code>Authorization: Bearer xxx</code>?</li>
+                    <li>¿Usa <strong>API Key</strong> (<code>X-API-Key: abc123</code>)?</li>
+                    <li>¿Usa cookies de sesión?</li>
+                    <li>¿Permite acceso sin autenticación (público)?</li>
+                </ul>
+
+                <hr>
+
+                <h2>API Documentation</h2>
+                <p>Las APIs usualmente están documentadas para que los mismos desarrolladores entiendan su uso. Siempre empezar la API Recon buscando esta documentación.</p>
+
+                <h3>Formas de descubrir la documentación de la API</h3>
+                <ol>
+                    <li><strong>Usar Burp Scanner</strong> (el crawler automático) — Burp puede crawlear toda la aplicación automáticamente e intentar encontrar páginas ocultas, incluyendo la documentación.</li>
+                    <li><strong>Navegar manualmente con el Browser de Burp</strong> — Abrís el navegador integrado de Burp y vas navegando por la aplicación normalmente. Mientras navegás, Burp captura todas las peticiones y a veces descubre endpoints de documentación.</li>
+                    <li><strong>Buscar rutas (paths) comunes de documentación</strong> — Las rutas más típicas donde suele encontrarse la documentación:
+                        <ul>
+                            <li>/api</li>
+                            <li>/swagger/index.html → abre la interfaz visual de Swagger (muy común)</li>
+                            <li>/openapi.json → archivo en formato JSON que describe toda la API</li>
+                            <li>/swagger.json</li>
+                            <li>/api-docs</li>
+                            <li>/v2/api-docs</li>
+                            <li>/docs</li>
+                            <li>/api/swagger</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h3>Lab: Exploiting an API endpoint using documentation</h3>
+                <p><strong>Objetivo:</strong> Eliminar al usuario "carlos" usando la documentación de la API.</p>
+                <p>Lo primero, una vez configurado Burp y el target, es iniciar sesión con la cuenta que da PortSwigger y probar funcionalidades que interactuarían con la API.</p>
+                <p>Al hacer "Update Email", aparece la siguiente petición:</p>
+                <pre><code>PATCH /api/user/wiener HTTP/2
+Host: [target].web-security-academy.net
+Content-Type: text/plain;charset=UTF-8
+
+{"email":"admin@admin.com"}</code></pre>
+                <p>El concepto principal de este laboratorio es ir acortando la URL:</p>
+                <pre><code>/api/user/wiener → /api/user → /api/</code></pre>
+                <p>Y cambiar el tipo de petición de <code>PATCH</code> a <code>GET</code> para leer la documentación de la API.</p>
+                <p><strong>Diferencias entre métodos HTTP:</strong></p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Método</th>
+                            <th>Qué hace</th>
+                            <th>Uso típico</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td>Obtener información</td>
+                            <td>Leer datos</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>Crear un nuevo recurso</td>
+                            <td>Crear usuario, subir archivo</td>
+                        </tr>
+                        <tr>
+                            <td>PUT</td>
+                            <td>Reemplazar todo el recurso</td>
+                            <td>Actualizar un objeto completo</td>
+                        </tr>
+                        <tr>
+                            <td>PATCH</td>
+                            <td>Actualizar solo una parte</td>
+                            <td>Cambiar solo el email, solo el estado</td>
+                        </tr>
+                        <tr>
+                            <td>DELETE</td>
+                            <td>Eliminar un recurso</td>
+                            <td>Borrar usuario</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>La documentación obtenida de la API es:</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Verb</th>
+                            <th>Endpoint</th>
+                            <th>Parameters</th>
+                            <th>Response</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td>/user/[username: String]</td>
+                            <td>{ }</td>
+                            <td>200 OK, User</td>
+                        </tr>
+                        <tr>
+                            <td>DELETE</td>
+                            <td>/user/[username: String]</td>
+                            <td>{ }</td>
+                            <td>200 OK, Result</td>
+                        </tr>
+                        <tr>
+                            <td>PATCH</td>
+                            <td>/user/[username: String]</td>
+                            <td>{"email": String}</td>
+                            <td>200 OK, User</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Con esta información, se envía una petición <code>DELETE</code> a <code>/api/user/carlos</code> sin parámetros. <strong>Laboratorio completado.</strong></p>
+
+                <hr>
+
+                <h2>API Endpoints — Enumeración Avanzada</h2>
+
+                <h3>1. Identificar endpoints (cómo encontrarlos)</h3>
+                <p>Aunque tengas documentación de la API, siempre es bueno buscar por cuenta propia porque la documentación suele estar desactualizada o incompleta.</p>
+                <p><strong>Cómo hacerlo en la práctica:</strong></p>
+                <ul>
+                    <li>Usá <strong>Burp Scanner</strong> para crawlear toda la aplicación automáticamente.</li>
+                    <li>Mientras navegás normalmente con <strong>Burp Browser</strong>, fijate en las URLs con patrones como:
+                        <ul>
+                            <li>/api/</li>
+                            <li>/v1/, /v2/, /api/v3/</li>
+                            <li>/rest/, /graphql</li>
+                        </ul>
+                    </li>
+                    <li>Revisá los <strong>archivos JavaScript</strong> (.js) — muchas veces los desarrolladores dejan ahí las llamadas a la API, especialmente en aplicaciones modernas con React, Angular o Vue.</li>
+                </ul>
+                <p><strong>Herramientas recomendadas:</strong></p>
+                <ul>
+                    <li><strong>JS Link Finder</strong> (BApp de Burp) → extrae endpoints de los archivos JS</li>
+                    <li>Pestaña <strong>Proxy &gt; HTTP history</strong> o <strong>Target &gt; Site map</strong></li>
+                </ul>
+                <p><strong>Consejo práctico:</strong> Después de crawlear, ir a <strong>Target → Site map</strong>, filtrar por "api" y revisar todo. También filtrar por extensión <code>.js</code>.</p>
+
+                <h3>2. Interactuar con los endpoints</h3>
+                <p>Una vez encontrado un endpoint (ej: <code>/api/tasks</code>), se juega con él usando:</p>
+                <ul>
+                    <li><strong>Burp Repeater</strong> → para probar manualmente y ver respuestas</li>
+                    <li><strong>Burp Intruder</strong> → para automatizar pruebas (fuzzing)</li>
+                </ul>
+                <p><strong>Qué probar:</strong></p>
+                <ul>
+                    <li>Cambiar el <strong>método HTTP</strong> (GET, POST, PUT, DELETE, PATCH, OPTIONS...)</li>
+                    <li>Cambiar el <strong>Content-Type</strong></li>
+                    <li>Modificar parámetros, IDs, cuerpos de request</li>
+                </ul>
+
+                <h3>3. Métodos HTTP soportados</h3>
+                <p>Cada endpoint puede aceptar diferentes métodos HTTP. No todos los métodos están documentados.</p>
+                <p>Ejemplo:</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Método</th>
+                            <th>Endpoint</th>
+                            <th>Qué hace</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>GET</td>
+                            <td>/api/tasks</td>
+                            <td>Obtener lista de tareas</td>
+                        </tr>
+                        <tr>
+                            <td>POST</td>
+                            <td>/api/tasks</td>
+                            <td>Crear una tarea nueva</td>
+                        </tr>
+                        <tr>
+                            <td>DELETE</td>
+                            <td>/api/tasks/1</td>
+                            <td>Borrar tarea con ID 1</td>
+                        </tr>
+                        <tr>
+                            <td>PUT / PATCH</td>
+                            <td>/api/tasks/1</td>
+                            <td>Actualizar tarea</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p><strong>Cómo probarlo:</strong> Enviar el request al <strong>Intruder</strong> y cargar la lista de HTTP verbs predefinida de Burp (<strong>Built-in wordlist → HTTP verbs</strong>).</p>
+                <blockquote><p>Siempre probá primero en objetos de baja prioridad (por ejemplo, tareas que vos mismo creaste), nunca en datos críticos.</p></blockquote>
+
+                <h3>4. Content-Type — tipos de contenido soportados</h3>
+                <p>Este es uno de los puntos <strong>más importantes</strong> en testing de APIs.</p>
+                <p>Muchas APIs esperan JSON (<code>application/json</code>), pero si se envía otro formato (XML, form-data, etc.) pueden comportarse de forma diferente.</p>
+                <p><strong>Por qué es útil cambiar el Content-Type:</strong></p>
+                <ul>
+                    <li>Puede revelar <strong>información sensible</strong> en los errores</li>
+                    <li>Puede <strong>burlar</strong> validaciones o filtros (ej: WAF que solo filtra JSON)</li>
+                    <li>Puede cambiar la lógica interna (ej: segura en JSON pero vulnerable a XXE en XML)</li>
+                </ul>
+                <p><strong>Cómo hacerlo:</strong></p>
+                <p>Cambiar el header:</p>
+                <pre><code>Content-Type: application/json</code></pre>
+                <p>por:</p>
+                <pre><code>Content-Type: application/xml</code></pre>
+                <p>Y cambiar el body al formato correspondiente.</p>
+                <p><strong>Herramienta recomendada:</strong> <strong>Content type converter</strong> (BApp de Burp) — convierte automáticamente JSON ↔ XML con un clic.</p>
+                <p><strong>Content-Types comunes a probar:</strong></p>
+                <ul>
+                    <li>application/json</li>
+                    <li>application/xml</li>
+                    <li>text/xml</li>
+                    <li>application/x-www-form-urlencoded</li>
+                    <li>multipart/form-data</li>
+                </ul>
+
+                <h3>Lab: Finding and exploiting an unused API endpoint</h3>
+                <p><strong>Objetivo:</strong> Comprar la "Lightweight l33t Leather Jacket" (precio ~$1337) con $0 en la cuenta.</p>
+                <p><strong>Pasos:</strong></p>
+                <ol>
+                    <li>Login con <code>wiener:peter</code></li>
+                    <li>Ir al producto y agregarlo al carrito</li>
+                    <li>Intentar "Place order" → error <strong>INSUFFICIENT FUNDS</strong></li>
+                    <li>En <strong>Proxy → HTTP history</strong> se encuentran:
+                        <ul>
+                            <li><code>GET /api/products/1/price</code></li>
+                            <li><code>POST /api/checkout</code></li>
+                        </ul>
+                    </li>
+                    <li>Enviar <code>GET /api/products/1/price</code> al Repeater</li>
+                    <li>Cambiar el método <code>GET</code> → <code>PATCH</code> con un body JSON:
+                        <pre><code>{"price": 0}</code></pre>
+                    </li>
+                    <li>La API acepta el PATCH y el precio del producto cambia a $0</li>
+                    <li>Agregar al carrito y completar la compra. <strong>Laboratorio completado.</strong></li>
+                </ol>
+
+                <hr>
+
+                <h2>Mass Assignment</h2>
+
+                <h3>¿Qué son los "Hidden Parameters"?</h3>
+                <p>Son parámetros que la API <strong>acepta</strong> pero que <strong>no están documentados</strong> y normalmente no aparecen en la aplicación web normal.</p>
+                <p>Ejemplo típico: la app te permite cambiar solo <code>username</code> y <code>email</code>, pero en realidad la API también acepta <code>isAdmin</code>, <code>role</code>, <code>price</code>, <code>discount</code>, <code>user_id</code>, etc., aunque el frontend no los muestre.</p>
+                <p>Si se logra enviar esos parámetros ocultos, se puede cambiar el comportamiento de la aplicación.</p>
+
+                <h3>Cómo encontrar parámetros ocultos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Herramienta</th>
+                            <th>Qué hace</th>
+                            <th>Cuándo usarla</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Burp Intruder</strong></td>
+                            <td>Prueba miles de nombres de parámetros automáticamente</td>
+                            <td>Cuando tenés tiempo y una buena wordlist</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Param Miner</strong></td>
+                            <td>Prueba hasta 65.000 nombres por request automáticamente</td>
+                            <td>Casi siempre (recomendado)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Content Discovery</strong></td>
+                            <td>Busca contenido y parámetros no linkeados</td>
+                            <td>Para descubrir endpoints y params</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Mass Assignment — la vulnerabilidad</h3>
+                <p>Muchos frameworks (Laravel, Spring Boot, Django, Node.js, etc.) tienen una funcionalidad llamada <strong>"auto-binding"</strong> o <strong>"mass assignment"</strong>: el framework <strong>automáticamente</strong> toma todos los parámetros que lleguen en el JSON y los copia al objeto interno.</p>
+                <p><strong>Ejemplo real:</strong></p>
+                <p>Un <code>GET /api/users/123</code> devuelve:</p>
+                <pre><code>{
+  "id": 123,
+  "name": "John Doe",
+  "email": "john@example.com",
+  "isAdmin": false,
+  "role": "user",
+  "balance": 0
+}</code></pre>
+                <p>Un <code>PATCH</code> normal para actualizar el perfil envía:</p>
+                <pre><code>{
+  "username": "wiener",
+  "email": "wiener@example.com"
+}</code></pre>
+                <p>Si la API es vulnerable a Mass Assignment, se pueden agregar los parámetros vistos en el GET:</p>
+                <pre><code>{
+  "username": "wiener",
+  "email": "wiener@example.com",
+  "isAdmin": true,
+  "role": "admin",
+  "balance": 999999
+}</code></pre>
+                <p>Si no hay validación adecuada, la aplicación los acepta y se obtiene acceso de administrador.</p>
+
+                <h3>Cómo explotarlo paso a paso</h3>
+                <ol>
+                    <li>Buscá un endpoint que permita <strong>actualizar</strong> algo (PATCH o PUT)</li>
+                    <li>Realizá un <strong>GET</strong> del mismo recurso (ej: <code>GET /api/users/me</code> o <code>/api/profile</code>)</li>
+                    <li>Compará ambos JSONs — los campos que aparecen en el GET pero no se envían en el PATCH son candidatos a hidden parameters</li>
+                    <li>Agregá esos campos al request de actualización con valores convenientes</li>
+                    <li>Probá primero con valores inválidos (<code>"isAdmin": "foo"</code>) para verificar que la aplicación los procesa</li>
+                    <li>Si confirma procesamiento, probá con el valor deseado (<code>"isAdmin": true</code>)</li>
+                </ol>
+                <blockquote><p><strong>Diferencia importante:</strong> Hidden Parameter = parámetro que existe pero no se usa normalmente. Mass Assignment = vulnerabilidad que permite abusar de esos parámetros porque el framework los bindea automáticamente.</p></blockquote>
+
+                <h3>Resumen metodológico</h3>
+                <ol>
+                    <li>Crawl con Burp Scanner + Browser</li>
+                    <li>Buscar endpoints con <code>/api/</code> y revisar todos los <code>.js</code> (usar JS Link Finder)</li>
+                    <li>Tomar endpoints interesantes → Repeater</li>
+                    <li>Probar <strong>todos los métodos HTTP</strong> (especialmente OPTIONS, POST, PUT, DELETE, PATCH)</li>
+                    <li>Probar cambiando <strong>Content-Type</strong> (JSON ↔ XML especialmente)</li>
+                    <li>Leer muy bien los errores y las respuestas — muchas veces dan pistas de otros parámetros o endpoints</li>
+                </ol>
+
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <span>© 2025 <span class="fa">Joaquin Silvagni</span></span>
+        <span>GitHub Pages</span>
+    </footer>
+</body>
+</html>

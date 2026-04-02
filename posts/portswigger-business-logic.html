@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Logic Vulnerabilities — Fallas de Diseño y 2FA Broken Logic — Joaquin Silvagni</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav>
+        <a class="nav-logo" href="../index.html">Joaquin Silvagni</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Blog</a></li>
+            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(251,146,60,.1);color:#fb923c;border:1px solid rgba(251,146,60,.25)">PortSwigger Labs</span>
+                    <span class="pdate">2025-04-20</span>
+                </div>
+                <h1 class="ph1">Business Logic Vulnerabilities — Fallas de Diseño y 2FA Broken Logic</h1>
+                <p class="psum">Análisis de vulnerabilidades causadas por fallos en la lógica de negocio: exceso de confianza en controles del cliente, manipulación de precios en checkout y explotación de 2FA mal implementado mediante fuerza bruta. Laboratorios resueltos de PortSwigger Web Security Academy.</p>
+                <div class="ptr">
+                    <span class="tag">Business Logic</span>
+                    <span class="tag">2FA</span>
+                    <span class="tag">Client-Side Controls</span>
+                    <span class="tag">PortSwigger</span>
+                </div>
+            </div>
+            <div class="post-content">
+                <h2>¿Qué son las vulnerabilidades de lógica de negocio?</h2>
+                <p>Son <strong>fallos en el diseño o en la implementación</strong> de una aplicación que permiten a un atacante <strong>provocar un comportamiento que la aplicación no debería tener</strong>, pero que técnicamente funciona porque sigue las reglas del código tal como está escrito.</p>
+                <p>En otras palabras: la aplicación hace exactamente lo que el código le dice que haga, pero ese comportamiento <strong>es perjudicial</strong> para el negocio o para la seguridad.</p>
+                <p><strong>Ejemplo sencillo:</strong> Imagina un sitio de e-commerce donde el flujo normal es:</p>
+                <ol>
+                    <li>Agregar producto al carrito</li>
+                    <li>Ir al checkout</li>
+                    <li>Pagar</li>
+                    <li>Recibir el producto</li>
+                </ol>
+                <p>Una vulnerabilidad de lógica de negocio podría permitirte <strong>saltarte el pago</strong> y recibir el producto igual, o <strong>cambiar el precio</strong> a $0, o <strong>usar un cupón ilimitadas veces</strong> aunque el sistema diga que es de un solo uso.</p>
+                <p>No es un error técnico clásico (como SQL Injection o XSS), sino un <strong>fallo en las reglas de negocio</strong>.</p>
+
+                <h2>¿Por qué se llaman "de lógica de negocio"?</h2>
+                <p>Porque la "lógica de negocio" son las reglas que definen <strong>cómo debe comportarse la aplicación</strong> en la vida real:</p>
+                <ul>
+                    <li>Un usuario normal no puede pedir un reembolso sin haber comprado.</li>
+                    <li>No se puede reservar stock sin pagar.</li>
+                    <li>No se puede modificar un pedido después de que fue aprobado.</li>
+                    <li>Un cupón solo se puede usar una vez.</li>
+                </ul>
+                <p>Cuando estas reglas <strong>no se implementan correctamente</strong> o <strong>no se validan en el servidor</strong>, surge la vulnerabilidad.</p>
+
+                <h2>¿Cómo surgen estas vulnerabilidades?</h2>
+                <p>Surgen principalmente por <strong>suposiciones incorrectas</strong> que hacen los desarrolladores sobre cómo van a usar la aplicación los usuarios:</p>
+                <ul>
+                    <li>"Los usuarios siempre van a seguir el flujo que diseñamos."</li>
+                    <li>"Los usuarios solo van a interactuar a través del navegador/web normal."</li>
+                    <li>"Los datos que llegan siempre van a ser válidos y con sentido."</li>
+                    <li>"Nadie va a intentar estados raros o inusuales."</li>
+                </ul>
+                <p>Estas suposiciones llevan a problemas como:</p>
+                <ol>
+                    <li><strong>Validaciones débiles o solo en el cliente (frontend)</strong> — El precio, la cantidad o el descuento se valida solo en JavaScript. Un atacante modifica la petición HTTP y envía lo que quiere.</li>
+                    <li><strong>Falta de validación del flujo completo en el servidor</strong> — No se verifica que el usuario realmente pasó por todos los pasos obligatorios.</li>
+                    <li><strong>No anticipar entradas inesperadas</strong> — Números negativos, cantidades muy grandes, strings raras, estados intermedios que no deberían existir, etc.</li>
+                    <li><strong>Condiciones de carrera (race conditions)</strong> — Dos peticiones simultáneas que el servidor no maneja correctamente (por ejemplo, redimir el mismo cupón dos veces al mismo tiempo).</li>
+                    <li><strong>Falta de modelado de amenazas</strong> — Nadie pensó: "¿Qué pasaría si un usuario malicioso hace X cosa que un usuario normal nunca haría?"</li>
+                    <li><strong>Complejidad de la aplicación</strong> — Cuanto más grande y con más funcionalidades es la app, más fácil es que queden "agujeros" en las reglas.</li>
+                </ol>
+
+                <h2>¿Por qué son difíciles de detectar?</h2>
+                <ul>
+                    <li>Los escáneres automáticos <strong>no las encuentran</strong> fácilmente, porque no hay un patrón técnico claro.</li>
+                    <li>Solo se ven cuando alguien <strong>prueba manualmente</strong> pensando como un atacante.</li>
+                    <li>Requieren <strong>conocimiento del dominio</strong> (entender cómo funciona el negocio).</li>
+                </ul>
+                <p>Por eso son muy buscadas por <strong>bug bounty hunters</strong> y pentesters manuales.</p>
+
+                <h2>Ejemplos comunes</h2>
+                <ul>
+                    <li>Comprar un producto y cambiar el precio a 0 o negativo antes de pagar.</li>
+                    <li>Redimir un cupón de "una sola vez" múltiples veces usando peticiones concurrentes.</li>
+                    <li>Modificar el estado de un pedido después de que ya fue aprobado.</li>
+                    <li>Acceder a datos o funciones de otro usuario cambiando un ID.</li>
+                    <li>Reservar todo el stock sin pagar para que nadie más pueda comprar.</li>
+                </ul>
+
+                <hr>
+
+                <h2>Excessive Trust in Client-Side Controls</h2>
+                <p>Esta es una de las causas <strong>más comunes</strong> de las vulnerabilidades de lógica de negocio.</p>
+                <p>Los desarrolladores cometen un error grave: <strong>asumen que el usuario solo va a usar la aplicación tal como ellos la diseñaron</strong> (es decir, solo a través del navegador, haciendo clic en los botones normales y respetando las validaciones que se ven en pantalla).</p>
+                <p>Por eso confían demasiado en las validaciones que se hacen <strong>en el navegador</strong> (client-side), como:</p>
+                <ul>
+                    <li>JavaScript que controla el precio</li>
+                    <li>Validaciones de formularios</li>
+                    <li>Restricciones en los campos (máximo de cantidad, mínimo de caracteres, etc.)</li>
+                    <li>Botones deshabilitados</li>
+                    <li>Flujos guiados paso a paso</li>
+                </ul>
+                <p><strong>El problema fundamental</strong> es que <strong>todo lo que ocurre en el navegador el usuario lo puede controlar completamente</strong>.</p>
+                <p>Un atacante <strong>no está obligado</strong> a usar el sitio web como un usuario normal. Puede:</p>
+                <ul>
+                    <li>Interceptar las peticiones con herramientas como <strong>Burp Suite</strong></li>
+                    <li>Modificar cualquier dato después de que salió del navegador pero antes de que llegue al servidor</li>
+                    <li>Enviar peticiones directamente con herramientas como Postman, curl o scripts en Python</li>
+                </ul>
+                <p>Resultado: <strong>Todas las validaciones del lado del cliente se vuelven inútiles</strong>.</p>
+
+                <h3>¿Cómo funciona en la práctica?</h3>
+                <ol>
+                    <li>El usuario llena un formulario en la página.</li>
+                    <li>El JavaScript valida que el precio sea $100, la cantidad máxima 5, etc.</li>
+                    <li>Al hacer clic en "Comprar", el navegador envía los datos al servidor.</li>
+                    <li>El atacante (con Burp Proxy) <strong>intercepta</strong> esa petición y cambia:
+                        <ul>
+                            <li>El precio de $100 → $1</li>
+                            <li>La cantidad de 1 → 1000</li>
+                            <li>El descuento de 10% → 999%</li>
+                        </ul>
+                    </li>
+                    <li>El servidor recibe esos datos modificados y, si <strong>no valida correctamente</strong>, los acepta como válidos.</li>
+                </ol>
+
+                <h3>Lab: Excessive Trust in Client-Side Controls</h3>
+                <p><strong>Objetivo:</strong> Comprar un producto modificando el precio desde el cliente.</p>
+                <p>Al interceptar con Burp la petición al agregar el producto al carrito, se puede ver que el precio viene como parámetro en la petición. Como solo está validado del lado del cliente, se puede cambiar el precio a $1 y completar la compra. <strong>Laboratorio completado.</strong></p>
+
+                <h3>Casos reales documentados</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Contexto</th>
+                            <th>Impacto</th>
+                            <th>Bounty típico</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Checkout de plan SaaS anual ($329.88 → $1.88)</td>
+                            <td>El backend no recalculaba el precio del lado del servidor</td>
+                            <td>$500 – $3000+</td>
+                        </tr>
+                        <tr>
+                            <td>Plataformas de facturación</td>
+                            <td>El parámetro <code>invoice_amount</code> venía del frontend y se podía bajar arbitrariamente</td>
+                            <td>$500 – $3000+</td>
+                        </tr>
+                        <tr>
+                            <td>Flujos de reward points + pago</td>
+                            <td>El monto final se calculaba en cliente y se enviaba tal cual</td>
+                            <td>Variable</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <blockquote><p><strong>Diferencia clave:</strong> En un lab de PortSwigger el impacto es una chaqueta barata. En bug bounty real, el impacto puede ser obtener un plan Pro completo casi gratis. La técnica es exactamente la misma.</p></blockquote>
+
+                <hr>
+
+                <h2>2FA Broken Logic</h2>
+
+                <h3>¿Qué vulnerabilidad tiene este lab?</h3>
+                <p>Es un <strong>fallo grave de lógica en la implementación de Two-Factor Authentication (2FA)</strong>.</p>
+                <p>La aplicación <strong>no verifica correctamente</strong> que la persona que está completando el paso de 2FA sea la misma que inició el login.</p>
+                <p>Específicamente:</p>
+                <ul>
+                    <li>Después de poner usuario + contraseña, la aplicación genera un código 2FA y lo envía por email.</li>
+                    <li>En la petición que verifica el código (<code>/login2</code>), existe un parámetro llamado <strong><code>verify</code></strong> que indica a qué usuario pertenece el código que se está verificando.</li>
+                    <li>La aplicación <strong>confía ciegamente</strong> en el valor de ese parámetro sin comprobar que coincida con la sesión iniciada.</li>
+                </ul>
+                <p><strong>Resultado:</strong> Podés iniciar login con tu cuenta (wiener), recibir tu código por email, y luego <strong>cambiar el parámetro <code>verify</code></strong> a <code>carlos</code> para que el código se aplique a la cuenta de la víctima.</p>
+                <p>Esto es un clásico ejemplo de <strong>Broken Logic in Multi-Factor Authentication</strong>.</p>
+
+                <h3>Resolución paso a paso</h3>
+                <p><strong>Paso 1 — Identificar el endpoint de 2FA:</strong></p>
+                <p>Al iniciar sesión, se captura la petición a <code>/login2</code>. El parámetro <code>verify</code> contiene el nombre de usuario para el que se genera el código 2FA:</p>
+                <pre><code>GET /login2
+Cookie: verify=wiener; session=...</code></pre>
+                <p>Se cambia <code>verify=wiener</code> a <code>verify=carlos</code>. La respuesta es <strong>200 OK</strong> — esto confirma que se generó un código 2FA para el usuario carlos.</p>
+                <p><strong>Paso 2 — Fuerza bruta del código 2FA:</strong></p>
+                <p>La segunda petición a <code>/login2</code> verifica el código:</p>
+                <pre><code>POST /login2
+Cookie: verify=carlos; session=...
+
+mfa-code=XXXX</code></pre>
+                <p>Se envía esta petición al <strong>Intruder</strong> (o Caido Automate) y se lanza un ataque de fuerza bruta en el campo <code>mfa-code</code>, iterando todos los valores de 0000 a 9999.</p>
+                <p><strong>Paso 3 — Usar la sesión obtenida:</strong></p>
+                <p>Una vez encontrado el código correcto, la respuesta incluye una <strong>Cookie de sesión</strong> válida para carlos. Se reemplaza la cookie en el navegador y se accede como carlos. <strong>Laboratorio completado.</strong></p>
+
+                <h3>Por qué esto es grave en entornos reales</h3>
+                <ul>
+                    <li>El 2FA está diseñado para ser el segundo factor de seguridad. Si puede ser eludido cambiando un parámetro, <strong>la seguridad adicional es ilusoria</strong>.</li>
+                    <li>En aplicaciones reales con rate limiting insuficiente, este ataque puede realizarse automáticamente.</li>
+                    <li>Este tipo de fallo aparece en bug bounty con frecuencia y suele clasificarse como <strong>crítico</strong> (P1/Critical) ya que permite tomar control de cuentas ajenas.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <span>© 2025 <span class="fa">Joaquin Silvagni</span></span>
+        <span>GitHub Pages</span>
+    </footer>
+</body>
+</html>
