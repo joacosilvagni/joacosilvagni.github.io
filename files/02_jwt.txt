@@ -1,0 +1,138 @@
+TÍTULO: JWT Token Manipulation: Explotando Vulnerabilidades en la Autenticación Web
+AUTOR: zSodex
+FECHA: Apr 3, 2025
+URL: https://medium.com/@zsodex/jwt-token-manipulation-explotando-vulnerabilidades-en-la-autenticaci%C3%B3n-web-7f416c1db6b6
+
+════════════════════════════════════════════════════════════
+
+Los JSON Web Tokens (JWT) son una tecnología ampliamente adoptada para llevar a cabo tareas de autenticación y autorización en entornos web modernos. Gracias a su capacidad de encapsular datos de manera compacta, auto-contenida y verificable, estos tokens facilitan significativamente la gestión de sesiones de usuario, el control de acceso a recursos protegidos y la implementación de sistemas sin estado (stateless). Sin embargo, esta conveniencia no está exenta de riesgos. Cuando los JWT son implementados sin las debidas medidas de seguridad, pueden convertirse en un punto crítico de vulnerabilidad. Este artículo se centra en analizar en profundidad las principales técnicas de manipulación y explotación de JWTs utilizadas por profesionales del Red Team, así como en describir metodologías de detección, herramientas especializadas y ejemplos prácticos basados en escenarios reales.
+
+────────────────────────────────────────────────────────────
+🔎 ¿Cómo Detectar un JWT en una Aplicación Web?
+────────────────────────────────────────────────────────────
+
+Antes de poder explotar un JWT, es fundamental confirmar su existencia y comprender su contexto dentro de la aplicación.
+
+1️⃣ Inspeccionar Cookies del Navegador
+
+Utilizar las herramientas de desarrollo del navegador (DevTools), accediendo a la pestaña Application → Storage → Cookies, donde es posible identificar valores que aparentan tener la estructura típica de un JWT (tres segmentos separados por puntos).
+
+    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvYWNvIiwicm9sZSI6ImFkbWluIn0.W5_V9IuCfl...
+
+Esta estructura revela un encabezado, un payload y una firma, codificados en Base64URL.
+
+2️⃣ Revisar las Cabeceras HTTP
+
+Muchos JWT se transmiten a través del encabezado Authorization, bajo el esquema Bearer:
+
+    curl -i https://victima.com/protected -H "Authorization: Bearer TOKEN_AQUÍ"
+
+Este enfoque es común en APIs RESTful.
+
+3️⃣ Verificar el Código JavaScript del Cliente
+
+JWTs también pueden almacenarse en el localStorage o sessionStorage:
+
+    console.log(localStorage.getItem("token"));
+    console.log(sessionStorage.getItem("jwt"));
+
+────────────────────────────────────────────────────────────
+📘 Caso Práctico: Explotación del Campo kid en un JWT RS256
+────────────────────────────────────────────────────────────
+
+Durante un escenario de laboratorio con una app vulnerable tipo CTF, identificamos un token JWT firmado con el algoritmo RS256. Al inspeccionar los campos del JWT en jwt.io, observamos dos elementos clave: un campo admin_cap con valor 0, y un kid con una ruta local.
+
+Nuestra hipótesis fue que el servidor cargaba la clave pública desde una ruta determinada por el kid, sin validación estricta. Esto nos permitió ejecutar una inyección de kid para que apuntara a una clave maliciosa generada por nosotros.
+
+🔨 Pasos del ataque:
+
+1. Generamos una clave privada RSA:
+
+    openssl genrsa -out privKey.key 2048
+
+2. Modificamos el token JWT:
+   - Cambiamos el campo admin_cap de false a true.
+   - Reemplazamos kid por una URL controlada: http://<IP>:7070/privKey.key
+   - Firmamos el nuevo token en jwt.io usando nuestra clave privada.
+
+3. Levantamos un servidor local para servir la clave pública:
+
+    python3 -m http.server 7070
+
+4. Insertamos el JWT modificado con Cookie Editor y recargamos la página.
+
+────────────────────────────────────────────────────────────
+🔥 Técnicas de Manipulación y Ataque de JWT (Red Team)
+────────────────────────────────────────────────────────────
+
+1️⃣ Decodificación y Análisis de Claims
+
+Al estar codificados en Base64URL, los JWT permiten una lectura directa de sus campos sin necesidad de la clave secreta. Entre los campos más interesantes: username, admin, role, scope, exp, entre otros.
+
+    import jwt
+    print(jwt.decode(token, options={"verify_signature": False}))
+
+Herramientas: jwt_tool.py, JWTInspector, plugins de Burp Suite.
+
+2️⃣ Fuerza Bruta de Claves (HS256)
+
+Cuando el algoritmo es HS256 (clave simétrica), una clave débil puede ser recuperada mediante ataques de diccionario:
+
+    python3 jwt-cracker.py -t TOKEN_AQUÍ -w rockyou.txt
+    john --wordlist=rockyou.txt --format=HMAC-SHA256 jwt_hash.txt
+
+3️⃣ Confusión de Algoritmo (RS256 → HS256)
+
+El atacante modifica el campo alg de RS256 a HS256, y engaña al servidor para que acepte la clave pública como si fuera una clave secreta:
+
+    { "alg": "HS256", "typ": "JWT" }
+
+    new_token = jwt.encode({"admin": True}, open("public.pem").read(), algorithm="HS256")
+
+4️⃣ Inyección en el Campo kid
+
+El campo kid indica qué clave usar para verificar la firma. Si el backend lo usa dinámicamente:
+
+    { "alg": "RS256", "kid": "../../../../tmp/key" }
+
+    ssh-keygen -t rsa -b 4096 -m PEM -f privKey.key
+
+5️⃣ Ataques con None Algorithm
+
+Algunas implementaciones defectuosas aceptan tokens cuyo algoritmo es none:
+
+    { "alg": "none", "typ": "JWT" }
+
+Eliminar la firma del token y modificar libremente los claims.
+
+6️⃣ Timing Attack y Oracle Side-Channel
+
+Si el servidor realiza la validación de firmas carácter por carácter, se puede usar un ataque de canal lateral basado en tiempo para deducir la firma correcta. Medir diferencias en tiempos de respuesta para cada intento.
+
+7️⃣ Replay y Session Fixation
+
+Los JWT robados pueden ser reutilizados si no existen mecanismos adecuados de invalidación. Usar un token capturado (mediante XSS o tráfico sin HTTPS) para autenticarse en múltiples sesiones.
+
+8️⃣ JWTs en Subdominios
+
+Cuando múltiples subdominios (api.victima.com y admin.victima.com) comparten el mismo dominio padre, y los JWT son válidos entre ellos, se puede explotar esa relación para escalar privilegios lateralmente.
+
+────────────────────────────────────────────────────────────
+🛠️ Herramientas Clave para JWT Attacks
+────────────────────────────────────────────────────────────
+
+- jwt_tool.py — Swiss Army Knife para manipulación y análisis de JWTs.
+- jwt-cracker — fuerza bruta de claves HS256.
+- Burp Suite con plugins de JWT — análisis dinámico en entornos web.
+- Postman con extensiones JWT para testeo de APIs.
+- CyberChef — para decodificación, codificación y análisis visual.
+
+────────────────────────────────────────────────────────────
+📌 Conclusión
+────────────────────────────────────────────────────────────
+
+Aunque los JSON Web Tokens son una solución práctica y escalable para la gestión de sesiones y control de acceso, su seguridad depende en gran medida de una implementación rigurosa y cuidadosa. Comprender estos ataques es esencial para ofensores que buscan evaluar aplicaciones web modernas y también para defensores que deben diseñar sistemas más robustos.
+
+════════════════════════════════════════════════════════════
+FIN DEL ARTÍCULO
+════════════════════════════════════════════════════════════

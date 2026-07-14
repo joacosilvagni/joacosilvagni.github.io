@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLMReaper — Una IA atacante contra LLMs en Ollama — Joaquin Silvagni</title>
+    <meta name="description" content="LLMReaper: un red-team para modelos locales. Una IA atacante que genera jailbreaks e inyecciones de prompt, escanea endpoints de Ollama, cruza CVEs y explica lo que rompió.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav id="nav" class="scrolled">
+        <a class="nav-logo" href="../index.html">Joaquin Silvagni</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#destacados">Destacado</a></li>
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Write-ups</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#destacados">&larr; Volver a destacados</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(241,73,99,.1);color:#f14963;border:1px solid rgba(241,73,99,.28)">Proyecto propio · Creador</span>
+                    <span class="pdate">2026-05-15</span>
+                </div>
+                <h1 class="ph1">LLMReaper — Una IA atacante que busca romper LLMs en Ollama</h1>
+                <p class="psum">Un red-team pensado para modelos locales. En vez de que vos escribas los
+                    jailbreaks a mano, LLMReaper pone una <strong>IA atacante</strong> a generarlos: fabrica
+                    inyecciones de prompt, escanea los endpoints de Ollama, cruza CVEs contra la versión detectada
+                    y te explica, en humano, qué logró romper.</p>
+                <div class="ptr">
+                    <span class="tag">LLM Security</span>
+                    <span class="tag">Ollama</span>
+                    <span class="tag">Prompt Injection</span>
+                    <span class="tag">Jailbreak</span>
+                    <span class="tag">Red Team</span>
+                    <span class="tag">Creador</span>
+                </div>
+            </div>
+
+            <div class="post-content">
+
+                <p>Todo el mundo está levantando modelos con <strong>Ollama</strong> —en la laptop, en un server
+                    de la empresa, en un contenedor que "es solo para probar". El problema es que un montón de esos
+                    <code>:11434</code> terminan expuestos, sin auth, y nadie los está mirando con ojos de
+                    atacante. Ahí es donde entra LLMReaper.</p>
+
+                <p>La idea central es simple: <strong>en vez de escribir yo los jailbreaks, pongo una IA a
+                    atacar a otra IA.</strong> LLMReaper tiene un "cerebro ofensivo" —una IA atacante— que genera
+                    prompts adversariales contra el modelo objetivo, prueba, lee la respuesta y ajusta. Vos
+                    definís el objetivo; la IA hace el trabajo de probar.</p>
+
+                <figure>
+                    <img src="../files/img/llmreaper.png" alt="Interfaz de LLMReaper mostrando el proyecto, el scanner, el modo Full/Safe y el cerebro atacante">
+                    <figcaption>El panel de LLMReaper: configurás el target de Ollama, el modelo, la IA atacante y lanzás el ataque autónomo. Todo local, sin build.</figcaption>
+                </figure>
+
+                <h2>Qué hace</h2>
+
+                <ul>
+                    <li><strong>Escanea el objetivo.</strong> Sondea los endpoints de Ollama
+                        (<code>/api/tags</code>, <code>/api/show</code>, <code>/api/chat</code>,
+                        <code>/api/generate</code>, <code>/api/pull</code>, <code>/api/create</code>…), detecta la
+                        versión y te dice qué quedó abierto.</li>
+                    <li><strong>Cruza CVEs.</strong> Mapea la versión detectada contra CVEs conocidos de Ollama y
+                        prueba los endpoints relacionados con payloads benignos (prueba de concepto, sin romper
+                        nada de más).</li>
+                    <li><strong>Ataca con IA.</strong> El cerebro atacante lanza <strong>60 sondas de prompt
+                        injection</strong> y jailbreaks contra el modelo, y puede correr en modo autónomo por
+                        varios turnos hasta encontrar una grieta.</li>
+                    <li><strong>Te lo explica.</strong> Cada hallazgo viene con una explicación legible: qué se
+                        probó, qué respondió el modelo y por qué eso importa. No un volcado de JSON.</li>
+                    <li><strong>Reporta.</strong> Genera el informe del assessment con las acciones confirmadas y
+                        la evidencia.</li>
+                </ul>
+
+                <h2>Safe y Full: vos elegís cuánto apretás</h2>
+
+                <p>Metí dos modos a propósito. <strong>Safe</strong> se queda en fingerprint: versión, modelos,
+                    metadata; ideal para un primer recon sin tocar nada sensible. <strong>Full</strong> va con
+                    todo —inferencia, rutas de administración y chequeos de capacidad con cortes rápidos para no
+                    colgar el target. Y hay una opción útil: <em>probar rutas sensibles con nombres falsos</em>,
+                    para ver cómo reacciona el modelo sin operar sobre datos reales.</p>
+
+                <div class="callout">
+                    <span class="ico">🧠</span>
+                    <div>La IA atacante corre principalmente sobre la API de <strong>Groq</strong>, con
+                        <strong>fallback a un Ollama local</strong>. O sea: podés auditar Ollama… usando Ollama.
+                        Y regulás qué porcentaje del trabajo hace el modelo local con un slider de "Local AI %".</div>
+                </div>
+
+                <h2>Local, sin build, en dos idiomas</h2>
+
+                <p>Backend en <strong>Python puro</strong> (solo librería estándar, cero dependencias raras) y
+                    frontend en HTML/CSS/JS estático: no hay que compilar nada, lo abrís y funciona. La interfaz
+                    está en <strong>español e inglés</strong>. Quería que bajara la barrera de entrada al máximo:
+                    auditar tu propio Ollama no debería requerir montar medio stack.</p>
+
+                <div class="callout">
+                    <span class="ico">⚠️</span>
+                    <div>LLMReaper es para <strong>testing autorizado</strong>: labs de investigación, auditorías
+                        internas y seguridad defensiva. Necesitás permiso explícito sobre el sistema que probás.
+                        Es una herramienta para entender y blindar tus modelos, no para atacar los de otros.</div>
+                </div>
+
+                <div class="art-cta">
+                    <div class="txt">
+                        <strong>LLMReaper — open en GitHub</strong>
+                        <span>Un red-team local para Ollama con IA atacante integrada. Mirá el código y las capturas.</span>
+                    </div>
+                    <div class="acts">
+                        <a class="btn btn-brand-llm" href="https://github.com/sentinelsec-org/LLMReaper" target="_blank" rel="noopener">Ver en GitHub →</a>
+                    </div>
+                </div>
+
+                <h2>Por qué lo construí</h2>
+
+                <p>Después de integrar el AI Copilot en <a href="nexhunt.html">NexHunt</a>, me quedó picando una
+                    pregunta que hoy casi nadie tiene resuelta: <strong>cómo se testea la seguridad de un LLM</strong>.
+                    Las apps de siempre las sabemos auditar; los modelos son territorio nuevo, y la superficie
+                    —prompt injection, jailbreaks, endpoints de administración expuestos— crece más rápido que las
+                    herramientas para revisarla.</p>
+
+                <p>LLMReaper es mi respuesta a esa pregunta, y el proyecto donde trabajo la intersección que más
+                    me interesa hoy: <strong>seguridad ofensiva + IA</strong>.</p>
+
+            </div>
+        </div>
+    </div>
+
+    <footer><span>&copy; 2026 <span class="fa">Joaquin Silvagni</span></span><span>Offensive Security · Tooling</span></footer>
+</body>
+</html>

@@ -1,0 +1,129 @@
+TÍTULO: Darkord Spyware: Post-Explotation Framework Movil
+AUTOR: zSodex
+FECHA: Apr 19, 2025
+URL: https://medium.com/@zsodex/darkord-spyware-post-explotation-framework-movil-68f5236ba578
+
+════════════════════════════════════════════════════════════
+
+🧬 Introducción
+
+Darkord no es una RAT común. Es una herramienta diseñada para cambiar el enfoque de los Spyware tradicionales, escrita desde cero con el objetivo de controlar totalmente el sistema víctima de forma móvil y portátil, desde cualquier lugar, sin dejar rastro, y evadiendo las detecciones modernas de antivirus y EDRs.
+
+Se trata de un spyware sigiloso que usa Discord como canal C2 y está pensado para operar en memoria, usando cifrado AES para ejecutar payloads sin tocar disco. Su arquitectura modular y su persistencia automatizada hacen de este toolkit algo perfecto para controlar a la víctima desde cualquier lugar, con cualquier dispositivo.
+
+────────────────────────────────────────────────────────────
+⚙️ Arquitectura y Filosofía
+────────────────────────────────────────────────────────────
+
+Darkord no depende de backdoors precarios ni exploits ruidosos. Opera sigilosamente:
+
+Loader + Payload AES:
+El agente viene cifrado con AES-256 y solo es descifrado en memoria por un loader liviano. Nada queda en disco, todo en memoria.
+
+Control por Discord:
+Usa bots de Discord como command & control, lo que permite pasar completamente desapercibido en entornos corporativos, sin levantar alertas en firewalls.
+
+Evasión activa:
+Detecta si está corriendo en una VM, sandbox o bajo herramientas de análisis, y en caso de duda: se autodestruye.
+
+Controla desde cualquier lugar:
+Al usar Discord como C2, puede ser controlado con tu dispositivo móvil desde cualquier parte del mundo.
+
+────────────────────────────────────────────────────────────
+🛠️ Funcionalidades
+────────────────────────────────────────────────────────────
+
+Darkord Spyware Console — v2.5
+Modular Post-Exploitation Framework
+Stealth-grade spyware agent para entornos controlados. C2 vía Discord.
+
+🎮 Remote Control
+    ss                          → Captura una screenshot del equipo víctima
+    rscreen [seconds]           → Graba la pantalla durante los segundos indicados
+    crazymouse                  → Movimientos aleatorios del mouse
+    say [text]                  → Usa la voz del sistema para decir un mensaje
+    browse [url] [times]        → Abre una URL en el navegador repetidas veces
+    warn [text]                 → Muestra una alerta falsa estilo sistema operativo
+    exit                        → Finaliza la sesión actual del agente
+
+🧰 System & File Operations
+    sysi                        → Info del sistema: OS, usuario, arquitectura, uptime
+    dir                         → Lista los archivos del directorio actual
+    cd [directory]              → Cambia el directorio de trabajo
+    get [path]                  → Descarga un archivo desde el host remoto
+    uf [file & path]            → Sube un archivo al sistema remoto
+    listproc                    → Muestra todos los procesos en ejecución
+    kill [name/PID]             → Termina un proceso por nombre o ID
+    p                           → Instala persistencia mediante tareas programadas
+    rp                          → Elimina la persistencia
+    deletetask                  → Borra la tarea programada usada para persistencia
+    hide                        → Oculta el archivo del spyware en el sistema
+
+🎙️ Audio Surveillance
+    rmic [seconds] [repetitions] → Graba desde el micrófono
+    say [text]                   → Texto a voz por el sistema
+
+⌨️ Keylogging & Data Theft
+    kl                          → Activa el keylogger en tiempo real (vía Webhooks)
+    skl                         → Detiene el keylogger
+    stealdiscord                → Extrae tokens de autenticación de Discord
+    chrome                      → Extrae contraseñas y cookies desde Chrome
+    history                     → Descarga el historial de navegación
+    delchrome                   → Elimina el perfil de usuario de Chrome
+
+⚙️ Command & Execution
+    cmd [command]               → Ejecuta comandos del sistema (PowerShell o CMD)
+    darkord                     → Info sobre la instancia actual de Darkord
+    shutdown                    → Apaga el sistema remoto
+    reboot                      → Reinicia el equipo de forma inmediata
+
+🧨 Emergency Protocols
+    selfdestruct                → Elimina el archivo del spyware y cierra el agente
+    ⚠️ Usar solo si se detecta amenaza inminente o para limpieza post-operación
+
+────────────────────────────────────────────────────────────
+Funcionalidades Avanzadas
+────────────────────────────────────────────────────────────
+
+Keylogger en Tiempo Real (kl/skl):
+Una de las joyas del arsenal es el keylogger con transmisión en vivo a través de webhooks de Discord. Los datos se formatean y se envían periódicamente a un canal privado.
+
+Cifrado AES en Payload:
+El archivo principal nunca se ejecuta plano. Está cifrado con AES-256 y solo puede ser descifrado por el loader con una clave única en tiempo de ejecución. Esto rompe firmas estáticas y evita detecciones por hash.
+
+Anti-VM, Anti-Sandbox, Anti-AV:
+Darkord escanea el entorno antes de desplegarse:
+- ¿Estás en una VM? Se autodestruye.
+- ¿Corriendo en Cuckoo o Hybrid Analysis? No arranca.
+- ¿Sandbox en cloud o AV corriendo? Se duerme o se borra.
+
+¿Por qué Discord?
+- Infraestructura lista — TLS, API estable y bots gratuitos
+- Zero cost — No necesitás VPS, no hay logs, no hay IP fija
+- Bajo perfil — Millones de bots activos, no levanta sospechas
+- Control multi-agente — Manejás decenas de víctimas desde un mismo canal
+
+────────────────────────────────────────────────────────────
+🚧 En desarrollo
+────────────────────────────────────────────────────────────
+
+- Ataques DoS desde las máquinas víctimas
+- Panel web para control gráfico
+- Automatización por horarios o triggers de red
+- Inyección en procesos legítimos
+
+────────────────────────────────────────────────────────────
+🔞 Disclaimer
+────────────────────────────────────────────────────────────
+
+Este software es para uso educativo y en entornos controlados. No se debe usar en sistemas sin consentimiento explícito. El autor no se responsabiliza por usos indebidos.
+
+────────────────────────────────────────────────────────────
+Cierre
+────────────────────────────────────────────────────────────
+
+Darkord busca cambiar la forma en la que operan los spyware tradicionales. Buscando portabilidad y control. Es un spyware de laboratorio para quienes buscan estudiar el verdadero comportamiento de las amenazas modernas: ejecución fileless, evasión dinámica, cifrado total y persistencia sin firma.
+
+════════════════════════════════════════════════════════════
+FIN DEL ARTÍCULO
+════════════════════════════════════════════════════════════

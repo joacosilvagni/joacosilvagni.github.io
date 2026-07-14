@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexHunt — La plataforma de Bug Bounty que construí — Joaquin Silvagni</title>
+    <meta name="description" content="NexHunt: una app de escritorio que encadena 20+ herramientas de recon, escaneo y explotación para bug bounty. La construí, la mantengo y la vendo. Cómo funciona y por qué la hice.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav id="nav" class="scrolled">
+        <a class="nav-logo" href="../index.html">Joaquin Silvagni</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#destacados">Destacado</a></li>
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Write-ups</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#destacados">&larr; Volver a destacados</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(46,204,113,.1);color:#2ecc71;border:1px solid rgba(46,204,113,.28)">Proyecto propio · Creador</span>
+                    <span class="pdate">2026-06-20</span>
+                </div>
+                <h1 class="ph1">NexHunt — La plataforma de Bug Bounty que construí</h1>
+                <p class="psum">Una app de escritorio que junta todo el flujo de un bug hunter —desde el
+                    reconocimiento hasta la explotación— en una sola interfaz. La diseñé, la programé, la
+                    mantengo, y hoy la vendo. Te cuento cómo funciona y, sobre todo, por qué la hice.</p>
+                <div class="ptr">
+                    <span class="tag">Bug Bounty</span>
+                    <span class="tag">Recon</span>
+                    <span class="tag">Nuclei</span>
+                    <span class="tag">Shodan</span>
+                    <span class="tag">Linux</span>
+                    <span class="tag">Creador</span>
+                </div>
+            </div>
+
+            <div class="post-content">
+
+                <p>Si alguna vez arrancaste un bug bounty sabés cómo es: veinte terminales abiertas,
+                    <code>subfinder</code> en una, <code>httpx</code> en otra, un <code>nuclei</code> corriendo
+                    por acá, resultados en archivos <code>.txt</code> tirados por todos lados, y a la media hora
+                    ya no te acordás qué target escaneaste ni con qué. Ese caos era mi día a día.</p>
+
+                <p>Con <strong>NexHunt</strong> quise resolver exactamente eso: una sola herramienta que cubriera
+                    todo el flujo —recon, escaneo, explotación, reporte— sin perder el hilo y sin reescribir los
+                    mismos comandos cada vez. No encontré ninguna que me convenciera, así que la construí.</p>
+
+                <figure>
+                    <img src="../files/img/nexhunt-recon-pipeline.png" alt="Pipeline de reconocimiento de NexHunt con las etapas 1 a 5 y screenshots automáticas de subdominios">
+                    <figcaption>El pipeline de recon: enumeración de subdominios, probing de hosts vivos y screenshots automáticas, todo en una pantalla.</figcaption>
+                </figure>
+
+                <h2>Qué hace, en concreto</h2>
+
+                <p>NexHunt encadena <strong>más de 20 herramientas del arsenal clásico</strong> —subfinder, amass,
+                    httpx, katana, nuclei, sqlmap, dalfox y varias más— y hace que la salida de una alimente
+                    automáticamente a la siguiente. Vos elegís el target y la app se encarga de mover los datos
+                    entre fases. El trabajo aburrido de copiar-pegar resultados de una tool a otra, desaparece.</p>
+
+                <p>El flujo está pensado en cinco etapas, tal como uno realmente ataca:</p>
+
+                <ul>
+                    <li><strong>Reconocimiento</strong> — enumeración de subdominios (pasiva y activa), probing de
+                        hosts vivos, escaneo de puertos, crawling web, URLs históricas y screenshots automáticas
+                        con gowitness.</li>
+                    <li><strong>Escaneo de vulnerabilidades</strong> — Nuclei con más de 8.000 templates,
+                        correlación de CVEs contra la tecnología detectada y fuzzing de directorios.</li>
+                    <li><strong>Explotación</strong> — SQLi con sqlmap, XSS con dalfox y xsstrike, command
+                        injection con commix, pruebas de SSRF/open redirect y una suite de ataques a JWT.</li>
+                    <li><strong>Proxy & tráfico</strong> — interceptás, editás y reenviás requests, armás el
+                        sitemap y fuzzeás, sin salir de la app.</li>
+                    <li><strong>Security tools</strong> — CORS mal configurado, bypass de 403, secretos filtrados
+                        en GitHub, buckets expuestos y auditores para GraphQL y APIs.</li>
+                </ul>
+
+                <figure>
+                    <img src="../files/img/nexhunt-exposure-intel.png" alt="Módulo Exposure Intel de NexHunt con búsqueda de exposición vía Shodan y dorks">
+                    <figcaption>Exposure Intel: búsqueda global de exposición con Shodan y dorks — APIs expuestas, paneles de admin, errores SQL, secretos filtrados.</figcaption>
+                </figure>
+
+                <h2>La parte que más me gustó resolver</h2>
+
+                <p>Lo difícil de una tool así no es correr comandos —eso es un <code>subprocess</code>. Lo difícil
+                    es <strong>que todo conviva sin romperse</strong>: 20+ binarios con dependencias distintas
+                    (Python, Node, Go), instalados de una, corriendo en paralelo, con una interfaz que no se
+                    congela mientras hay diez procesos escupiendo salida.</p>
+
+                <p>Trabajé mucho en el <strong>instalador de una sola línea</strong>: un script de bash que
+                    monta todo el arsenal y compila la app en Kali, Debian, Ubuntu, Arch y CachyOS. Que alguien
+                    pase de cero a "listo para cazar" en un comando era, para mí, casi tan importante como la app
+                    en sí.</p>
+
+                <div class="callout">
+                    <span class="ico">🧠</span>
+                    <div>La versión PRO suma un <strong>AI Copilot</strong>: analiza los hallazgos, sugiere
+                        vectores de ataque y te arma el borrador del reporte. Fue mi primera integración seria de
+                        un modelo dentro de una herramienta ofensiva, y me abrió la cabeza para lo que vino
+                        después (spoiler: LLMReaper).</div>
+                </div>
+
+                <figure>
+                    <img src="../files/img/nexhunt-proxy-sitemap.png" alt="Proxy y sitemap de NexHunt interceptando tráfico HTTP">
+                    <figcaption>El proxy integrado: interceptar, editar y reenviar requests, y mapear el sitio sin depender de otra herramienta.</figcaption>
+                </figure>
+
+                <h2>Gratis de verdad, PRO opcional</h2>
+
+                <p>Algo que me importaba: que el tier gratuito <strong>sea usable de verdad</strong>, no una demo
+                    recortada. La versión free trae la suite de recon completa, escaneo y explotación sobre un
+                    target, el proxy y la base de hallazgos, sin límite de tiempo ni funciones capadas a la mitad.</p>
+
+                <p>El <strong>PRO cuesta $20, pago único, para siempre</strong> —sin suscripción mensual. Suma el
+                    AI Copilot, los pipelines automáticos, escaneo masivo sobre todos los hosts, la suite de JWT,
+                    el Proxy Intruder y detección de buckets expuestos. Lo puse a ese precio a propósito: un solo
+                    bounty aceptado ya te lo paga.</p>
+
+                <div class="art-cta">
+                    <div class="txt">
+                        <strong>NexHunt v1.7.0 — en beta activa</strong>
+                        <span>Probala gratis o llevate el PRO. Corre en Linux (Kali, Debian, Ubuntu, Arch).</span>
+                    </div>
+                    <div class="acts">
+                        <a class="btn btn-brand-nex" href="https://nexhunt.myshopify.com/" target="_blank" rel="noopener">Ver en la tienda →</a>
+                        <a class="btn btn-ghost" href="https://github.com/sentinelsec-org/nexhunt" target="_blank" rel="noopener">GitHub ↗</a>
+                    </div>
+                </div>
+
+                <h2>Por qué lo pongo como mi proyecto estrella</h2>
+
+                <p>Porque no es un script de fin de semana. Es un producto <strong>de punta a punta</strong>:
+                    pensé la arquitectura, escribí la app, armé el instalador, diseñé la interfaz, redacté la
+                    documentación y hasta monté la tienda para venderlo. Me obligó a ser prolijo con cosas que en
+                    un CTF podés ignorar —manejo de errores, experiencia de usuario, empaquetado, soporte.</p>
+
+                <p>Es también la mejor muestra de cómo trabajo: entiendo el problema desde adentro porque soy el
+                    usuario, y lo llevo hasta algo que otra gente efectivamente usa a diario.</p>
+
+            </div>
+        </div>
+    </div>
+
+    <footer><span>&copy; 2026 <span class="fa">Joaquin Silvagni</span></span><span>Offensive Security · Tooling</span></footer>
+</body>
+</html>

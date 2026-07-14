@@ -1,0 +1,123 @@
+TÍTULO: HackTheBox: Stocker — Bypass a Logins con Inyecciones NoSQL y Escalada de Privilegios en Node.js
+AUTOR: zSodex
+FECHA: Apr 5, 2025
+URL: https://medium.com/@zsodex/hackthebox-stocker-bypass-a-logins-con-inyecciones-nosql-y-escalada-de-privilegios-en-node-js-d0b2666149f3
+
+════════════════════════════════════════════════════════════
+
+Recientemente, me enfrenté al desafío de la máquina "Stocker" en HackTheBox, catalogada con una dificultad media. Esta experiencia me permitió explorar en profundidad varias vulnerabilidades web, destacando especialmente la inyección NoSQL y técnicas avanzadas de escalada de privilegios en entornos construidos sobre Node.js. A continuación, compartiré todo el proceso que seguí para comprometer esta máquina, incluyendo mis razonamientos, pruebas, errores y descubrimientos. Espero que esta guía sirva como una herramienta educativa valiosa para otros entusiastas y profesionales de la ciberseguridad.
+
+────────────────────────────────────────────────────────────
+1. Enumeración Inicial
+────────────────────────────────────────────────────────────
+
+Empecé con la etapa clásica de reconocimiento. Realicé un escaneo de puertos completo para obtener una imagen clara de los servicios expuestos:
+
+    nmap -p- --min-rate 5000 -sCV -oN nmap.txt 10.10.11.196
+
+Este escaneo reveló que los siguientes puertos estaban abiertos:
+- 22/tcp: SSH (OpenSSH 8.2p1)
+- 80/tcp: HTTP (nginx 1.18.0)
+
+Al acceder al puerto 80 desde el navegador, fui redirigido automáticamente al dominio stocker.htb. Tras agregar esta entrada al archivo /etc/hosts, procedí a analizar el sitio. Me encontré con una tienda de muebles sencilla, sin funcionalidades llamativas o interactivas a primera vista. Esto sugería que el contenido dinámico podría estar oculto o disponible solo a usuarios autenticados, lo cual motivó una búsqueda más profunda.
+
+────────────────────────────────────────────────────────────
+2. Descubrimiento de Subdominios
+────────────────────────────────────────────────────────────
+
+Dado que el sitio principal no ofrecía mucho de interés, consideré que podría haber subdominios con otras funcionalidades. Utilicé ffuf para realizar una búsqueda de virtual hosts usando el encabezado Host, con el siguiente comando:
+
+    ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://stocker.htb -H "Host: FUZZ.stocker.htb"
+
+Esto me permitió descubrir el subdominio dev.stocker.htb. Lo añadí también al archivo /etc/hosts y comencé a explorarlo.
+
+────────────────────────────────────────────────────────────
+3. Análisis del Subdominio dev.stocker.htb
+────────────────────────────────────────────────────────────
+
+Este subdominio presentaba una página de inicio de sesión bastante básica. Como suele ser habitual, intenté algunas credenciales por defecto sin éxito. Luego me detuve a inspeccionar el almacenamiento local y las cookies. Allí encontré una cookie llamada connect.sid, lo cual es típico de aplicaciones construidas con Express.js, un framework de Node.js. Esto me llevó a asumir que el backend podría estar usando MongoDB como base de datos, un stack común para este tipo de apps.
+
+Esto encendió una alarma: si los desarrolladores no habían validado correctamente la entrada del usuario, probablemente podía explotar una inyección NoSQL.
+
+────────────────────────────────────────────────────────────
+4. Explotación de Inyección NoSQL
+────────────────────────────────────────────────────────────
+
+En las bases de datos NoSQL como MongoDB, si una aplicación utiliza directamente la entrada del usuario en una consulta (por ejemplo, con findOne()), sin asegurar que el contenido sea del tipo esperado, es posible manipular la estructura de la consulta usando operadores especiales como $ne, $gt, $regex, etc.
+
+La aplicación enviaba los datos de inicio de sesión en formato x-www-form-urlencoded, pero eso limita nuestras posibilidades, ya que Mongo interpretará los valores como strings simples. Para poder incluir operadores, necesitábamos enviar la solicitud en formato JSON crudo. Por eso modifiqué la petición con Burp Suite y la reconstruí así:
+
+    POST /api/login HTTP/1.1
+    Host: dev.stocker.htb
+    Content-Type: application/json
+
+    { "username": {"$ne": null}, "password": {"$ne": null} }
+
+Aquí lo que hicimos fue utilizar el operador $ne (not equal) para que cualquier documento en la base de datos que tenga un valor diferente a null para username y password sea válido. Como Mongo está buscando el primer documento que cumpla esa condición, y ambos campos están presentes en todos los usuarios, logramos autenticarnos sin necesidad de conocer credenciales reales.
+
+Este tipo de ataque solo es posible si el backend espera un string pero no valida que efectivamente lo sea. Por ejemplo:
+
+    User.findOne({username: req.body.username, password: req.body.password})
+
+Aquí req.body.username puede ser un string o un objeto, y si es un objeto con $ne, se ejecutará igual. De esta manera, obtuvimos acceso al panel como un usuario válido, lo cual fue el primer paso clave hacia el compromiso total.
+
+────────────────────────────────────────────────────────────
+5. Análisis de la Funcionalidad de Pedidos y Vulnerabilidad HTML/PDF
+────────────────────────────────────────────────────────────
+
+Ya dentro del panel, la aplicación tenía una funcionalidad para realizar pedidos. Al probarla, noté que generaba archivos PDF dinámicos a partir de la información que uno ingresaba, como el nombre del producto. Esto inmediatamente me llevó a pensar en una posible inyección HTML reflejada en PDF.
+
+Intercepté la petición con Burp y modifiqué el contenido del pedido para incluir HTML malicioso dentro del campo title:
+
+    "title": "<iframe src=\"file:///etc/passwd\"></iframe>"
+
+Al generar el PDF y abrirlo, efectivamente se incluía un iframe que mostraba el contenido de /etc/passwd. Esto confirmó que el motor que generaba el PDF no sanitizaba el HTML, lo que permitía realizar ataques tipo file inclusion a través de iframes locales.
+
+────────────────────────────────────────────────────────────
+6. Extracción de Credenciales desde el Código Fuente
+────────────────────────────────────────────────────────────
+
+En index.js, encontré una cadena de conexión clara hacia MongoDB:
+
+    const dbURI = "mongodb://dev:IHeardPassphrasesArePrettySecure@localhost/dev?authSource=admin&w=1";
+
+Con esto, ya tenía usuario y contraseña. Aunque el usuario era dev, no existía tal cuenta en el sistema Linux. Revisando /etc/passwd que ya había expuesto antes, noté que había un usuario llamado angoose. Decidí probar las mismas credenciales a través de SSH:
+
+    ssh angoose@stocker.htb
+
+¡Y funcionaron! Habíamos logrado obtener una shell en el sistema con un usuario real.
+
+────────────────────────────────────────────────────────────
+7. Escalada de Privilegios con Node.js y Path Traversal
+────────────────────────────────────────────────────────────
+
+El siguiente paso fue buscar formas de escalar privilegios. Ejecuté:
+
+    sudo -l
+
+Y descubrí algo muy interesante:
+
+    (ALL) /usr/bin/node /usr/local/scripts/*.js
+
+Esto significa que el usuario angoose podía ejecutar cualquier archivo JavaScript dentro de /usr/local/scripts/ usando Node.js como root.
+
+El problema es que no tenía permisos de escritura en ese directorio. Sin embargo, gracias a la forma en la que funciona el patrón *.js, y a que Node.js permite rutas relativas, era posible realizar un ataque de path traversal.
+
+Creé un archivo pwn.js en /tmp con el siguiente contenido:
+
+    const { exec } = require('child_process');
+    exec('chmod u+s /bin/bash');
+
+Y luego lo ejecuté con:
+
+    sudo /usr/bin/node /usr/local/scripts/../../../tmp/pwn.js
+
+Finalmente:
+
+    bash -p
+    whoami
+    root
+
+════════════════════════════════════════════════════════════
+FIN DEL ARTÍCULO
+════════════════════════════════════════════════════════════

@@ -4,49 +4,149 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Joaquin Silvagni — Seguridad Informática</title>
-    <meta name="description" content="Portfolio de ciberseguridad de Joaquin Silvagni (zSodex). Pentester certificado eJPT, write-ups de HackTheBox, investigación en seguridad web y herramientas ofensivas.">
+    <title>Joaquin Silvagni — Offensive Security</title>
+    <meta name="description" content="Portfolio de Joaquin Silvagni: pentester certificado eJPT y creador de herramientas ofensivas (NexHunt, LLMReaper). Bug bounty, seguridad web y write-ups técnicos.">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body>
 
-    <nav>
+    <nav id="nav">
         <a class="nav-logo" href="index.html">Joaquin Silvagni</a>
         <ul class="nav-links">
+            <li><a href="#destacados">Destacado</a></li>
+            <li><a href="#sentinel">SentinelSec</a></li>
             <li><a href="#ejpt">Cert</a></li>
-            <li><a href="#blog">Blog</a></li>
-            <li><a href="#proyectos">Proyectos</a></li>
-            <li><a href="#skills">Skills</a></li>
+            <li><a href="#blog">Write-ups</a></li>
             <li><a href="#contacto">Contacto</a></li>
         </ul>
     </nav>
 
     <!-- HERO -->
     <div class="hero">
-        <div class="hero-grid-bg"></div>
-        <div class="hero-glow"></div>
-        <div class="hero-glow2"></div>
-        <div class="hero-content">
-            <div class="hero-tag fi">Cybersecurity · Offensive Security</div>
-            <h1 class="fi">Joaquin<br><span class="accent">Silvagni</span></h1>
-            <p class="hero-desc fi">Apasionado por la seguridad ofensiva y el pentesting.<br>Certificado eJPT —
-                enfocado en evaluaciones de redes,<br>aplicaciones web y análisis de malware.<br>Documentando el
-                aprendizaje a través de write-ups técnicos.</p>
-            <div class="hero-badges fi">
-                <span class="badge highlight">eJPT certified</span>
-                <span class="badge">HackTheBox</span>
-                <span class="badge">TryHackMe</span>
-                <span class="badge">Web App Pentesting</span>
-                <span class="badge">Network Recon</span>
-                <span class="badge">Post-Exploitation</span>
+        <div class="hero-inner">
+            <div class="hero-content">
+                <div class="hero-tag fi">Offensive Security · Tooling</div>
+                <h1 class="fi">Joaquin<br><span class="accent">Silvagni</span></h1>
+                <p class="hero-desc fi">Pentester certificado <strong>eJPT</strong> y creador de herramientas
+                    ofensivas. Construyo <strong>tooling para bug bounty y red team</strong>, y documento lo que
+                    encuentro en write-ups técnicos.</p>
+                <div class="hero-badges fi">
+                    <span class="badge highlight">eJPT certified</span>
+                    <span class="badge">Bug Bounty</span>
+                    <span class="badge">Web App Pentesting</span>
+                    <span class="badge">Tool Developer</span>
+                    <span class="badge">Red Team</span>
+                    <span class="badge">Python</span>
+                </div>
+                <div class="hero-cta fi">
+                    <a class="btn btn-primary" href="#destacados">Ver trabajo destacado →</a>
+                    <a href="https://github.com/joacosilvagni" target="_blank" rel="noopener" class="btn btn-ghost">GitHub ↗</a>
+                </div>
             </div>
-            <div class="hero-cta fi">
-                <a class="btn btn-primary" href="#blog">Ver Write-ups →</a>
-                <a href="https://github.com/joacosilvagni" target="_blank" class="btn btn-ghost">GitHub ↗</a>
+
+            <aside class="hero-panel fi">
+                <div class="hp-top">
+                    <span class="hp-k">Práctica constante</span>
+                    <span class="hp-avail">Disponible</span>
+                </div>
+                <a class="plat" style="--pc:#9fef00" href="https://profile.hackthebox.com/profile/019d3ace-acfd-71c6-b1de-05c504e4a584" target="_blank" rel="noopener">
+                    <span class="logo">
+                        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#9fef00" fill-rule="evenodd" d="M20 2 36 11 36 29 20 38 4 29 4 11Z M20 12 28 16.5 28 23.5 20 28 12 23.5 12 16.5Z"/>
+                        </svg>
+                    </span>
+                    <span class="meta">
+                        <span class="nm">Hack The Box</span>
+                        <span class="ds">Ver mi perfil &amp; ranking</span>
+                    </span>
+                    <span class="go">↗</span>
+                </a>
+                <a class="plat" style="--pc:#e02d2d" href="https://tryhackme.com/p/Joaco" target="_blank" rel="noopener">
+                    <span class="logo">
+                        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 3 34 8V20c0 9-7 14-14 17-7-3-14-8-14-17V8Z" fill="rgba(224,45,45,.14)" stroke="#e02d2d" stroke-width="2.2" stroke-linejoin="round"/>
+                            <path d="M13.5 19.5 18 24l8.5-9" fill="none" stroke="#e02d2d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <span class="meta">
+                        <span class="nm">TryHackMe</span>
+                        <span class="ds">/p/Joaco</span>
+                    </span>
+                    <span class="go">↗</span>
+                </a>
+                <a class="plat" style="--pc:#5aa9e6" href="https://www.kali.org/" target="_blank" rel="noopener">
+                    <span class="logo">
+                        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="34" height="34" rx="9" fill="none" stroke="#5aa9e6" stroke-width="2"/>
+                            <path d="M11 14l6 6-6 6" fill="none" stroke="#5aa9e6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M20 27h9" stroke="#5aa9e6" stroke-width="2.4" stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                    <span class="meta">
+                        <span class="nm">Kali Linux</span>
+                        <span class="ds">Entorno de trabajo</span>
+                    </span>
+                    <span class="go">↗</span>
+                </a>
+            </aside>
+        </div>
+    </div>
+
+    <!-- DESTACADOS / FLAGSHIP TOOLS -->
+    <div class="sw" id="destacados">
+        <div class="sl">Trabajo destacado</div>
+        <h2 class="st">Herramientas que construí</h2>
+        <p class="sec-lead">Dos proyectos propios end-to-end: diseño, desarrollo y publicación. Son el trabajo
+            del que estoy más orgulloso.</p>
+        <div class="feat-grid" id="featured-container"></div>
+    </div>
+
+    <hr class="fd">
+
+    <!-- SENTINELSEC / FOUNDER -->
+    <div class="sw" id="sentinel">
+        <div class="sl">Emprendimiento</div>
+        <h2 class="st">Fundador de SentinelSec</h2>
+        <a class="founder" href="https://sentinelsec.online/" target="_blank" rel="noopener">
+            <span class="founder-mark">
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M32 4 54 12v18c0 15-11 24-22 30-11-6-22-15-22-30V12Z" fill="rgba(227,179,78,.1)" stroke="#e3b34e" stroke-width="2.6" stroke-linejoin="round"/>
+                    <ellipse cx="32" cy="31" rx="13" ry="8.5" fill="none" stroke="#e3b34e" stroke-width="2.4"/>
+                    <circle cx="32" cy="31" r="4" fill="#e3b34e"/>
+                </svg>
+            </span>
+            <div class="txt">
+                <div class="role">Fundador · sentinelsec.online</div>
+                <h3>SentinelSec</h3>
+                <p>Seguridad ofensiva práctica para PYMES y startups. Es el paraguas bajo el que desarrollo y
+                    publico mis herramientas —<strong>NexHunt</strong> y <strong>LLMReaper</strong>— y desde
+                    donde ofrezco pentesting y auditorías accesibles para equipos que todavía no tienen un área
+                    de seguridad propia.</p>
             </div>
+            <span class="go2">Visitar <span class="arrow">→</span></span>
+        </a>
+
+        <div class="sl" style="margin:2.5rem 0 1.1rem">Stack & plataformas</div>
+        <div class="logo-strip">
+            <span class="logo-chip" style="--lc:#2ecc71">
+                <span class="ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="none" stroke="#2ecc71" stroke-width="1.8"/><circle cx="12" cy="12" r="2.4" fill="#2ecc71"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="#2ecc71" stroke-width="1.8" stroke-linecap="round"/></svg></span>NexHunt</span>
+            <span class="logo-chip" style="--lc:#e3b34e">
+                <span class="ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 20 5v6c0 5.5-4 9-8 11-4-2-8-5.5-8-11V5Z" fill="none" stroke="#e3b34e" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="11" r="2" fill="#e3b34e"/></svg></span>SentinelSec</span>
+            <a class="logo-chip" style="--lc:#5aa9e6" href="https://www.kali.org/" target="_blank" rel="noopener">
+                <span class="ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 8l4 4-4 4" fill="none" stroke="#5aa9e6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 16h6" stroke="#5aa9e6" stroke-width="1.9" stroke-linecap="round"/></svg></span>Kali Linux</a>
+            <a class="logo-chip" style="--lc:#9fef00" href="https://profile.hackthebox.com/profile/019d3ace-acfd-71c6-b1de-05c504e4a584" target="_blank" rel="noopener">
+                <span class="ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#9fef00" fill-rule="evenodd" d="M12 2 21 7 21 17 12 22 3 17 3 7Z M12 7 17 9.5 17 14.5 12 17 7 14.5 7 9.5Z"/></svg></span>Hack The Box</a>
+            <a class="logo-chip" style="--lc:#e02d2d" href="https://tryhackme.com/p/Joaco" target="_blank" rel="noopener">
+                <span class="ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 20 5v6c0 5.5-4 9-8 11-4-2-8-5.5-8-11V5Z" fill="none" stroke="#e02d2d" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 12 11 14.5 15.5 9.5" fill="none" stroke="#e02d2d" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>TryHackMe</a>
+            <span class="logo-chip" style="--lc:#ff6633"><span class="ic"><span class="d"></span></span>Burp Suite</span>
+            <span class="logo-chip" style="--lc:#7ab8ff"><span class="ic"><span class="d"></span></span>Nmap</span>
+            <span class="logo-chip" style="--lc:#4aa5c9"><span class="ic"><span class="d"></span></span>Metasploit</span>
+            <span class="logo-chip" style="--lc:#8a6dff"><span class="ic"><span class="d"></span></span>Nuclei</span>
+            <span class="logo-chip" style="--lc:#ffd343"><span class="ic"><span class="d"></span></span>Python</span>
         </div>
     </div>
 
@@ -58,17 +158,15 @@
         <h2 class="st">eJPT — eLearnSecurity</h2>
         <div class="ejpt-card">
             <div>
-                <div class="ejpt-title">Junior Penetration Tester (eJPT)</div>
+                <div class="ejpt-title">Junior Penetration Tester</div>
                 <div class="ejpt-sub">eLearnSecurity / INE Security</div>
-                <p class="ejpt-desc">El eJPT valida habilidades prácticas en evaluaciones de seguridad reales.
-                    Consiste en un laboratorio en vivo donde se debe comprometer una red completa aplicando técnicas
-                    de reconocimiento, explotación y post-explotación.</p>
-                <p class="ejpt-desc">Cubre redes TCP/IP, metodologías de pentesting, enumeración de servicios,
-                    vulnerabilidades web y de red, y pivoting. Aprobado con resultados sólidos.</p>
+                <p class="ejpt-desc">Certificación 100% práctica: un laboratorio en vivo donde hay que comprometer
+                    una red completa aplicando reconocimiento, explotación y post-explotación. Aprobada con
+                    resultados sólidos.</p>
                 <div class="ejpt-topics">
                     <span class="tt">Network Pentesting</span>
                     <span class="tt">Web App Attacks</span>
-                    <span class="tt">Host & Network Enumeration</span>
+                    <span class="tt">Enumeración</span>
                     <span class="tt">Pivoting</span>
                     <span class="tt">Exploitation</span>
                     <span class="tt">Post-Exploitation</span>
@@ -88,7 +186,9 @@
     <!-- BLOG -->
     <div class="sw" id="blog">
         <div class="sl">Write-ups & Research</div>
-        <h2 class="st">Artículos técnicos</h2>
+        <h2 class="st">Notas técnicas</h2>
+        <p class="sec-lead">Máquinas de HackTheBox, labs de PortSwigger y teoría de seguridad web, resueltos y
+            explicados paso a paso.</p>
         <div class="filters" id="filters-container"></div>
         <div class="ag" id="cards-container"></div>
     </div>
@@ -97,25 +197,25 @@
 
     <!-- PROYECTOS -->
     <div class="sw" id="proyectos">
-        <div class="sl">GitHub · Proyectos</div>
-        <h2 class="st">Código propio</h2>
+        <div class="sl">GitHub · Más código</div>
+        <h2 class="st">Otros proyectos</h2>
         <div class="pg">
-            <a class="pc" href="https://github.com/joacosilvagni/littlebastard" target="_blank">
+            <a class="pc" href="https://github.com/joacosilvagni/littlebastard" target="_blank" rel="noopener">
                 <div class="ph"><span class="pi">🐍</span><span class="pl"><span class="ld lang-python"></span>Python</span></div>
                 <div class="pn">littlebastard</div>
                 <div class="pd">RAT en Python con sockets. Ejecuta comandos remotos, lista archivos y más.</div>
             </a>
-            <a class="pc" href="https://github.com/joacosilvagni/harder-tryhackme" target="_blank">
+            <a class="pc" href="https://github.com/joacosilvagni/harder-tryhackme" target="_blank" rel="noopener">
                 <div class="ph"><span class="pi">📝</span><span class="pl"><span class="ld lang-md"></span>Markdown</span></div>
                 <div class="pn">harder-tryhackme</div>
                 <div class="pd">Write-up Harder (TryHackMe). .git expuesto, HMAC bypass type juggling PHP 7.3, RCE web.</div>
             </a>
-            <a class="pc" href="https://github.com/joacosilvagni/thm-cheese" target="_blank">
+            <a class="pc" href="https://github.com/joacosilvagni/thm-cheese" target="_blank" rel="noopener">
                 <div class="ph"><span class="pi">🧀</span><span class="pl"><span class="ld lang-md"></span>Markdown</span></div>
                 <div class="pn">thm-cheese</div>
                 <div class="pd">WriteUp Cheese CTF en TryHackMe paso a paso.</div>
             </a>
-            <a class="pc" href="https://github.com/joacosilvagni/ikiai" target="_blank">
+            <a class="pc" href="https://github.com/joacosilvagni/ikiai" target="_blank" rel="noopener">
                 <div class="ph"><span class="pi">🌐</span><span class="pl"><span class="ld lang-html"></span>HTML</span></div>
                 <div class="pn">ikiai</div>
                 <div class="pd">Proyecto web personal. Activo y en desarrollo.</div>
@@ -135,8 +235,8 @@
                 <ul class="skl">
                     <li class="ski">Nmap / Masscan</li>
                     <li class="ski">Gobuster / ffuf / dirsearch</li>
-                    <li class="ski">Subdominio hunting</li>
-                    <li class="ski">OSINT básico</li>
+                    <li class="ski">Subdomain hunting</li>
+                    <li class="ski">OSINT · Shodan</li>
                 </ul>
             </div>
             <div class="sk">
@@ -147,25 +247,29 @@
                     <li class="ski">XSS / CSRF / IDOR</li>
                     <li class="ski">JWT Attacks</li>
                     <li class="ski">LFI / RFI / Path Traversal</li>
+                    <li class="ski">API Testing (REST · GraphQL)</li>
+                    <li class="ski">Mass Assignment · BOLA / BFLA</li>
+                    <li class="ski">Business Logic Flaws</li>
                 </ul>
             </div>
             <div class="sk">
-                <div class="skt">Post-Explotación</div>
+                <div class="skt">Red Team &amp; Post-Ex</div>
                 <ul class="skl">
-                    <li class="ski">LinPEAS / WinPEAS</li>
+                    <li class="ski">C2 frameworks (Discord / HTTP)</li>
+                    <li class="ski">Payloads fileless / in-memory</li>
+                    <li class="ski">Evasión AV / sandbox</li>
                     <li class="ski">Privilege Escalation</li>
-                    <li class="ski">Pivoting</li>
-                    <li class="ski">Metasploit Framework</li>
-                    <li class="ski">John / Hashcat</li>
+                    <li class="ski">Pivoting &amp; movimiento lateral</li>
+                    <li class="ski">Persistencia · Metasploit</li>
                 </ul>
             </div>
             <div class="sk">
-                <div class="skt">Desarrollo & Scripting</div>
+                <div class="skt">Desarrollo & Tooling</div>
                 <ul class="skl">
-                    <li class="ski">Python (scripts ofensivos)</li>
+                    <li class="ski">Python (tooling ofensivo)</li>
                     <li class="ski">Bash scripting</li>
                     <li class="ski">APK Analysis (apktool)</li>
-                    <li class="ski">HTML / CSS</li>
+                    <li class="ski">HTML / CSS / JS</li>
                 </ul>
             </div>
         </div>
@@ -178,13 +282,13 @@
         <p class="csub">Abierto a oportunidades en seguridad ofensiva, bug bounty y pentesting.</p>
         <div class="cl">
             <a href="mailto:joaquinsilvagni@gmail.com" class="btn btn-primary">Email →</a>
-            <a href="https://github.com/joacosilvagni" target="_blank" class="btn btn-ghost">GitHub ↗</a>
+            <a href="https://github.com/joacosilvagni" target="_blank" rel="noopener" class="btn btn-ghost">GitHub ↗</a>
         </div>
     </div>
 
     <footer>
-        <span>© 2025 <span class="fa">Joaquin Silvagni</span></span>
-        <span>GitHub Pages</span>
+        <span>© 2026 <span class="fa">Joaquin Silvagni</span></span>
+        <span>Offensive Security · Tooling</span>
     </footer>
 
     <!-- ADMIN BUTTON -->
@@ -304,7 +408,7 @@
             { id: "htb", name: "HackTheBox", color: "#a3e635" },
             { id: "web", name: "Web Security", color: "#60a5fa" },
             { id: "portswigger", name: "PortSwigger Labs", color: "#fb923c" },
-            { id: "tool", name: "Herramientas", color: "#f87171" },
+            { id: "tool", name: "Herramientas", color: "#e3b34e" },
             { id: "theory", name: "Teoría / OWASP", color: "#94a3b8" },
             { id: "bugbounty", name: "Bug Bounty", color: "#818cf8" }
         ];
@@ -313,6 +417,32 @@
         // POSTS — metadata + link a página individual
         // ═══════════════════════════════════════════════════════════
         const POSTS = [
+            {
+                id: 101, cat: "tool", featured: true,
+                title: "NexHunt — La plataforma de Bug Bounty que construí",
+                date: "2026-06-20",
+                desc: "Una app de escritorio que encadena 20+ herramientas de recon, escaneo y explotación en un solo flujo. La construí, la mantengo y hoy la vendo. Cómo funciona y por qué existe.",
+                tags: ["Bug Bounty", "Recon", "Nuclei", "Shodan", "Creador"],
+                url: "posts/nexhunt.html",
+                img: "files/img/nexhunt-recon-pipeline.png",
+                brand: "#2ecc71",
+                role: "Creador · Sentinel Security",
+                price: "PRO · $20 lifetime",
+                shop: "https://nexhunt.myshopify.com/",
+                repo: "https://github.com/sentinelsec-org/nexhunt"
+            },
+            {
+                id: 102, cat: "tool", featured: true,
+                title: "LLMReaper — Una IA atacante contra LLMs en Ollama",
+                date: "2026-05-15",
+                desc: "Un red-team para modelos locales: una IA atacante que genera jailbreaks e inyecciones de prompt, escanea endpoints de Ollama, cruza CVEs y explica lo que rompió.",
+                tags: ["LLM Security", "Ollama", "Prompt Injection", "Red Team"],
+                url: "posts/llmreaper.html",
+                img: "files/img/llmreaper.png",
+                brand: "#f14963",
+                role: "Creador · Sentinel Security",
+                repo: "https://github.com/sentinelsec-org/LLMReaper"
+            },
             {
                 id: 1, cat: "htb",
                 title: "HackTheBox: Stocker — Bypass a Logins con Inyecciones NoSQL y Escalada de Privilegios en Node.js",
@@ -407,9 +537,47 @@
             return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
         }
 
+        function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
         // ═══════════════════════════════════════════════════════════
-        // RENDER CARDS + FILTROS
+        // RENDER FEATURED (flagship tools)
         // ═══════════════════════════════════════════════════════════
+        function renderFeatured() {
+            const fc = document.getElementById('featured-container');
+            if (!fc) return;
+            fc.innerHTML = '';
+            const feats = POSTS.filter(p => p.featured);
+            feats.forEach(p => {
+                const brand = p.brand || 'var(--accent)';
+                const links = [];
+                if (p.shop) links.push('<a href="' + p.shop + '" target="_blank" rel="noopener">Comprar ↗</a>');
+                if (p.repo) links.push('<a href="' + p.repo + '" target="_blank" rel="noopener">GitHub ↗</a>');
+                const a = document.createElement('a');
+                a.className = 'feat-card';
+                a.href = p.url;
+                a.style.setProperty('--brand', brand);
+                a.innerHTML =
+                    '<div class="feat-media"><img src="' + p.img + '" alt="' + esc(p.title) + '" loading="lazy"></div>' +
+                    '<div class="feat-body">' +
+                    '<div class="feat-eyebrow"><span class="dot"></span>' + esc((getCat(p.cat) || {}).name || 'Herramienta') +
+                    '<span class="role">' + esc(p.role || '') + '</span></div>' +
+                    '<div class="feat-title">' + esc(p.title) + '</div>' +
+                    '<div class="feat-desc">' + esc(p.desc) + '</div>' +
+                    '<div class="feat-tags">' + (p.tags || []).map(t => '<span>' + esc(t) + '</span>').join('') + '</div>' +
+                    '<div class="feat-foot">' +
+                    '<span class="feat-cta">Leer el caso <span class="arrow">→</span></span>' +
+                    (p.price ? '<span class="feat-price">' + esc(p.price) + '</span>' : '') +
+                    (links.length ? '<span class="feat-links">' + links.join('') + '</span>' : '') +
+                    '</div></div>';
+                fc.appendChild(a);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // RENDER CARDS + FILTROS (write-ups, excluye destacados)
+        // ═══════════════════════════════════════════════════════════
+        function listPosts() { return POSTS.filter(p => !p.featured); }
+
         function buildCard(post) {
             const cat = getCat(post.cat);
             const color = cat ? cat.color : '#94a3b8';
@@ -417,26 +585,30 @@
             d.className = 'ac';
             d.href = post.url;
             d.innerHTML =
+                '<span class="adate">' + (post.date || '') + '</span>' +
+                '<div class="ac-main">' +
+                '<div class="ac-top">' +
                 '<span class="cat-badge" style="background:' + hexToRgba(color, .1) + ';color:' + color + ';border:1px solid ' + hexToRgba(color, .25) + '">' + (cat ? cat.name : (post.cat || 'Sin categoría')) + '</span>' +
-                '<div class="atitle">' + post.title + '</div>' +
+                '<span class="atitle">' + post.title + '</span>' +
+                '</div>' +
                 '<div class="adesc">' + post.desc + '</div>' +
                 '<div class="atags">' + (post.tags || []).map(t => '<span class="tag">' + t + '</span>').join('') + '</div>' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:.25rem">' +
-                '<span class="adate">' + (post.date || '') + '</span>' +
-                '<span class="aarrow">Leer →</span></div>';
+                '</div>' +
+                '<span class="aarrow">Leer →</span>';
             return d;
         }
 
         function renderCards() {
             const fc = document.getElementById('filters-container');
+            const base = listPosts();
             fc.innerHTML = '';
             const allBtn = document.createElement('button');
             allBtn.className = 'filter-btn' + (activeFilter === 'all' ? ' active' : '');
-            allBtn.textContent = 'Todos (' + POSTS.length + ')';
+            allBtn.textContent = 'Todos (' + base.length + ')';
             allBtn.addEventListener('click', () => { activeFilter = 'all'; renderCards(); });
             fc.appendChild(allBtn);
             CATEGORIES.forEach(cat => {
-                const count = POSTS.filter(p => p.cat === cat.id).length;
+                const count = base.filter(p => p.cat === cat.id).length;
                 if (!count) return;
                 const b = document.createElement('button');
                 b.className = 'filter-btn' + (activeFilter === cat.id ? ' active' : '');
@@ -447,16 +619,25 @@
             });
             const cc = document.getElementById('cards-container');
             cc.innerHTML = '';
-            const sorted = [...POSTS].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+            const sorted = [...base].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
             const filtered = activeFilter === 'all' ? sorted : sorted.filter(p => p.cat === activeFilter);
             if (!filtered.length) {
-                cc.innerHTML = '<div style="font-family:var(--mono);font-size:.8rem;color:var(--text-dim);grid-column:1/-1;padding:2rem 0">No hay posts en esta categoría aún.</div>';
+                cc.innerHTML = '<div style="font-family:var(--mono);font-size:.8rem;color:var(--text-dim);padding:2rem 0">No hay posts en esta categoría aún.</div>';
             } else {
                 filtered.forEach(p => cc.appendChild(buildCard(p)));
             }
         }
 
+        renderFeatured();
         renderCards();
+
+        // ═══════════════════════════════════════════════════════════
+        // NAV scroll state
+        // ═══════════════════════════════════════════════════════════
+        const navEl = document.getElementById('nav');
+        const onScroll = () => navEl.classList.toggle('scrolled', window.scrollY > 24);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
 
         // ═══════════════════════════════════════════════════════════
         // MARKDOWN → HTML RENDERER
@@ -486,7 +667,7 @@
         // ═══════════════════════════════════════════════════════════
         function slugify(text) {
             return text.toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/^-+|-+$/g, '')
                 .substring(0, 60);
@@ -507,16 +688,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${post.title} — Joaquin Silvagni</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <nav>
-        <a class="nav-logo" href="../index.html"><span>~/</span>zsodex</a>
+    <nav id="nav" class="scrolled">
+        <a class="nav-logo" href="../index.html">Joaquin Silvagni</a>
         <ul class="nav-links">
+            <li><a href="../index.html#destacados">Destacado</a></li>
             <li><a href="../index.html#ejpt">Cert</a></li>
-            <li><a href="../index.html#blog">Blog</a></li>
-            <li><a href="../index.html#proyectos">Proyectos</a></li>
+            <li><a href="../index.html#blog">Write-ups</a></li>
             <li><a href="../index.html#skills">Skills</a></li>
             <li><a href="../index.html#contacto">Contacto</a></li>
         </ul>
@@ -540,7 +721,7 @@
             </div>
         </div>
     </div>
-    <footer><span>&copy; 2025 <span class="fa">Joaquin Silvagni</span> &middot; zSodex</span><span>Built with &#x1F5A4; &middot; GitHub Pages</span></footer>
+    <footer><span>&copy; 2026 <span class="fa">Joaquin Silvagni</span></span><span>Offensive Security · Tooling</span></footer>
 </body>
 </html>`;
         }
@@ -572,7 +753,31 @@
         // ADMIN — OPEN / CLOSE
         // ═══════════════════════════════════════════════════════════
         const ov = document.getElementById('admOv');
-        function openAdmin() {
+
+        // ── Password gate ──────────────────────────────────────────
+        // Solo se guarda el hash SHA-256, nunca la contraseña en claro.
+        // Aviso: en un sitio estático esto es una barrera, no seguridad real.
+        const ADMIN_HASH = 'dcba1cc3b58ced5e6d83d9e63a7f4c81840ae91eb149dad0e4da40b941008ce3';
+        let _unlocked = false;
+
+        async function sha256Hex(str) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function requireUnlock() {
+            if (_unlocked) return true;
+            const pw = prompt('🔒 Contraseña de administración:');
+            if (pw === null) return false;
+            try {
+                if (await sha256Hex(pw) === ADMIN_HASH) { _unlocked = true; return true; }
+            } catch (e) { alert('Este navegador no soporta crypto.subtle (usá HTTPS).'); return false; }
+            alert('Contraseña incorrecta.');
+            return false;
+        }
+
+        async function openAdmin() {
+            if (!await requireUnlock()) return;
             if (!document.getElementById('pdate').value)
                 document.getElementById('pdate').value = new Date().toISOString().slice(0, 10);
             buildCatSelect();
@@ -585,7 +790,7 @@
         // ═══════════════════════════════════════════════════════════
         // ADMIN — CATEGORÍAS
         // ═══════════════════════════════════════════════════════════
-        const PALETTE = ['#00e5ff', '#a3e635', '#ff3c6e', '#fb923c', '#818cf8', '#34d399', '#f472b6', '#facc15', '#94a3b8', '#e879f9'];
+        const PALETTE = ['#e3b34e', '#a3e635', '#2ecc71', '#fb923c', '#818cf8', '#34d399', '#f14963', '#facc15', '#94a3b8', '#e879f9'];
 
         function buildCatSelect() {
             const sel = document.getElementById('pcat');
@@ -643,7 +848,7 @@
         document.getElementById('cat-color').addEventListener('input', updatePreview);
         document.getElementById('cat-name-input').addEventListener('input', updatePreview);
         function updatePreview() {
-            const color = document.getElementById('cat-color').value || '#00e5ff';
+            const color = document.getElementById('cat-color').value || '#e3b34e';
             const name = document.getElementById('cat-name-input').value || 'Nombre';
             const prev = document.getElementById('cat-preview');
             prev.textContent = name;
@@ -657,7 +862,7 @@
         document.getElementById('addCatBtn').addEventListener('click', () => {
             const id = document.getElementById('cat-id').value.trim().replace(/\s+/g, '-').toLowerCase();
             const name = document.getElementById('cat-name-input').value.trim();
-            const color = document.getElementById('cat-color').value.trim() || '#00e5ff';
+            const color = document.getElementById('cat-color').value.trim() || '#e3b34e';
             if (!id || !name) { setMsg('catMsg', 'ID y nombre son obligatorios.', 'err'); return; }
             if (CATEGORIES.find(c => c.id === id)) { setMsg('catMsg', 'Ya existe una categoría con ese ID.', 'err'); return; }
             CATEGORIES.push({ id, name, color });
@@ -697,7 +902,7 @@
                     const postUrl = post.url;
                     const idx = POSTS.indexOf(post);
                     POSTS.splice(idx, 1);
-                    renderPostList(); renderCards();
+                    renderPostList(); renderCards(); renderFeatured();
                     setMsg('listMsg', '⟳ Eliminando post...', 'load');
                     const tok = _tok || document.getElementById('globalTok').value.trim();
                     if (!tok) { setMsg('listMsg', 'Token requerido.', 'err'); return; }
@@ -851,7 +1056,6 @@
             el.className = 'msg ' + t;
         }
     </script>
-
 
 </body>
 
