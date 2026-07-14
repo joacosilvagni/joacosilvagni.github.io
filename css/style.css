@@ -757,6 +757,39 @@ nav.scrolled {
     text-transform: uppercase
 }
 
+a.ejpt-badge-box {
+    text-decoration: none;
+    display: block;
+    transition: transform .2s
+}
+
+a.ejpt-badge-box:hover { transform: translateY(-3px) }
+
+a.ejpt-badge-box:hover .ejpt-badge-icon {
+    border-color: var(--accent);
+    box-shadow: 0 0 24px rgba(227, 179, 78, .15)
+}
+
+.ejpt-verify {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: 1.5rem;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid var(--accent-line);
+    padding: .5rem 1.1rem;
+    border-radius: 100px;
+    transition: background .2s, transform .2s
+}
+
+.ejpt-verify:hover {
+    background: var(--accent-soft);
+    transform: translateY(-1px)
+}
+
 /* ---------- WRITEUP INDEX (clean list) ---------- */
 .filters {
     display: flex;
