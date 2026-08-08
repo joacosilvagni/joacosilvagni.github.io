@@ -1914,3 +1914,231 @@ footer span {
     .feat-foot { flex-wrap: wrap }
     .feat-links { margin-left: 0 }
 }
+
+/* ============================================================
+   WRITEUP THEME  (scoped to .wu — HTB-green accent, no afecta
+   al home ni a los articulos de herramientas)
+   ============================================================ */
+.post-page.wu {
+    --accent: #00e676;
+    --accent-soft: rgba(0, 230, 118, .10);
+    --accent-line: rgba(0, 230, 118, .30)
+}
+
+.wu .post-content h2 {
+    display: flex;
+    align-items: center;
+    gap: .7rem
+}
+
+.wu .post-content h2::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 4px;
+    height: 1.05em;
+    background: var(--accent);
+    border-radius: 2px;
+    box-shadow: 0 0 12px rgba(0, 230, 118, .45)
+}
+
+.wu .post-content pre {
+    position: relative;
+    padding-top: 2.9rem
+}
+
+.wu .post-content pre::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2.1rem;
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+    border-radius: 10px 10px 0 0
+}
+
+.wu .post-content pre::after {
+    content: "";
+    position: absolute;
+    top: .78rem;
+    left: 1.1rem;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #ff5f57;
+    box-shadow: 18px 0 0 #febc2e, 36px 0 0 #28c840
+}
+
+.wu .post-content pre .g { color: var(--accent) }
+.wu .post-content pre .o { color: #ff6b35 }
+.wu .post-content pre .m { color: var(--text-faint) }
+.wu .post-content pre .r { color: #f85149 }
+
+.wu-hero {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    padding: 2.5rem 1.5rem 3.5rem;
+    border-bottom: 1px solid var(--border-soft)
+}
+
+.wu-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(0, 230, 118, .10), transparent 65%);
+    pointer-events: none
+}
+
+.wu-hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(0, 230, 118, .04) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 230, 118, .04) 1px, transparent 1px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000, transparent 75%);
+    pointer-events: none
+}
+
+.wu-hero-inner { position: relative; max-width: 760px; margin: 0 auto }
+
+.wu-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent-line);
+    background: var(--accent-soft);
+    padding: .35rem .8rem;
+    border-radius: 100px;
+    margin-bottom: 1.5rem
+}
+
+.wu-title {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    line-height: 1.05;
+    letter-spacing: -.02em;
+    color: var(--text-bright);
+    margin-bottom: 1rem
+}
+
+.wu-title .nm { color: var(--accent); text-shadow: 0 0 40px rgba(0, 230, 118, .35) }
+
+.wu-sub {
+    font-size: 1.02rem;
+    color: var(--text-dim);
+    max-width: 600px;
+    margin: 0 auto 2.25rem;
+    line-height: 1.7
+}
+
+.wu-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.75rem;
+    margin-bottom: 2.75rem
+}
+
+.wu-stat { text-align: center }
+.wu-stat .v { display: block; font-family: var(--mono); font-size: 1.25rem; font-weight: 700; color: var(--accent) }
+.wu-stat .l { font-family: var(--mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint) }
+
+.wu-shot { position: relative; max-width: 520px; margin: 0 auto }
+.wu-shot img {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+    border: 1px solid var(--accent-line);
+    box-shadow: 0 0 60px rgba(0, 230, 118, .10), 0 20px 60px rgba(0, 0, 0, .55)
+}
+
+.wu-chain { max-width: 760px; margin: 0 auto; padding: 3.5rem 1.5rem 0 }
+.wu-chain .lbl { font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin-bottom: .6rem }
+.wu-chain h2 { font-family: var(--mono); font-size: 1.5rem; font-weight: 700; color: var(--text-bright); margin-bottom: 2rem }
+
+.chain-step { display: grid; grid-template-columns: 44px 1fr; gap: 0 1.1rem; position: relative }
+.chain-step:not(:last-child) .chain-content { padding-bottom: 1.75rem }
+.chain-step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 21px;
+    top: 44px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(var(--accent), var(--border))
+}
+.chain-num {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: var(--bg);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1
+}
+.chain-content h3 { font-family: var(--mono); font-size: .95rem; color: var(--text-bright); margin: .55rem 0 .2rem }
+.chain-content p { font-size: .86rem; color: var(--text-dim) }
+
+.cve {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: #ff6b35;
+    border: 1px solid rgba(255, 107, 53, .4);
+    background: rgba(255, 107, 53, .12);
+    padding: .1rem .45rem;
+    border-radius: 4px;
+    margin-left: .4rem;
+    vertical-align: middle
+}
+
+.step-sec { margin-bottom: 3.5rem }
+.step-head { display: flex; align-items: flex-start; gap: 1.1rem; margin-bottom: 1.5rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--border) }
+.step-num { font-family: var(--mono); font-size: 2.6rem; font-weight: 700; line-height: 1; color: var(--border); min-width: 2.4ch }
+.step-head .t h2 { font-family: var(--display); font-size: 1.4rem; color: var(--text-bright); margin: 0 0 .2rem }
+.step-head .t h2::before { display: none }
+.step-head .t p { font-family: var(--mono); font-size: .72rem; color: var(--text-dim); margin: 0 }
+
+.shot { margin: 1.5rem 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden }
+.shot .cap { font-family: var(--mono); font-size: .68rem; color: var(--text-dim); padding: .6rem .9rem; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; gap: .5rem; align-items: center }
+.shot .cap::before { content: "\1F4F8" }
+.shot img { width: 100%; display: block }
+
+.callout .k { display: block; font-family: var(--mono); font-size: .72rem; letter-spacing: .05em; color: var(--accent); margin-bottom: .35rem }
+.callout.warn { border-left-color: #ff6b35 }
+.callout.warn .k { color: #ff6b35 }
+
+.wu-diagram { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.3rem; margin: 1.5rem 0; overflow-x: auto }
+.wu-diagram .cap { font-family: var(--mono); font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); margin-bottom: .8rem }
+.wu-diagram pre { font-family: var(--mono); font-size: .72rem; line-height: 1.6; color: var(--text); white-space: pre; margin: 0 }
+.wu .post-content .wu-diagram pre { padding-top: 0 }
+.wu .post-content .wu-diagram pre::before,
+.wu .post-content .wu-diagram pre::after { display: none }
+
+.wu-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: .86rem }
+.wu-table th { text-align: left; font-family: var(--mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); padding: .6rem .7rem; border-bottom: 1px solid var(--border) }
+.wu-table td { padding: .7rem .7rem; border-bottom: 1px solid var(--border-soft); vertical-align: top; color: var(--text-dim) }
+.wu-table td.n { color: var(--accent); font-family: var(--mono); font-weight: 700 }
+.wu-table td.v { color: var(--text-bright) }
+
+@media (max-width: 640px) {
+    .step-head { gap: .75rem }
+    .step-num { font-size: 2rem }
+    .wu-stats { gap: 1.1rem }
+    .wu-hero { padding: 6rem 1.2rem 2.5rem }
+}
