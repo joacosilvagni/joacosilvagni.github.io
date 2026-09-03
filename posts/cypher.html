@@ -101,7 +101,7 @@ PORT   STATE SERVICE VERSION
 307  /demo                                       → redirige a /login sin sesión
 <span class="o">301  /testing/                                   → directory listing expuesto</span>
 <span class="o">200  /testing/custom-apoc-extension-1.0-SNAPSHOT.jar</span>  ← build olvidado</code></pre>
-                    <div class="callout"><span class="k">// EN CRIOLLO — directory listing</span>Cuando un servidor web no
+                    <div class="callout"><span class="k">// EN SIMPLE — directory listing</span>Cuando un servidor web no
                         tiene <code>index.html</code> en una carpeta y el listing está activado, muestra la lista de
                         archivos como si fuera un explorador. Dejar eso en producción es regalar el mapa: acá expuso
                         un <code>.jar</code> de compilación que nunca debería haber estado ahí.</div>
@@ -141,7 +141,7 @@ PORT   STATE SERVICE VERSION
                         <div class="t"><h2>Cypher Injection en /api/auth</h2>
                             <p>Inyección en el login · oráculo de comilla · auth bypass</p></div>
                     </div>
-                    <div class="callout"><span class="k">// EN CRIOLLO — inyección en una base de datos</span>Es el mismo
+                    <div class="callout"><span class="k">// EN SIMPLE — inyección en una base de datos</span>Es el mismo
                         bug que la clásica SQL injection, con otra gramática. Neo4j no habla SQL, habla <strong>Cypher</strong>
                         (<code>MATCH</code>/<code>WHERE</code>/<code>RETURN</code> en vez de <code>SELECT</code>), pero el
                         error es idéntico: si el backend arma la pregunta <em>pegando</em> tu texto
@@ -219,7 +219,7 @@ config:
     neo4j:
       username: neo4j
       password: <span class="o">cU4btyib.20xtCMCXkBmerhK</span></code></pre>
-                    <div class="callout"><span class="k">// EN CRIOLLO — credential reuse</span>Un patrón clásico del mundo
+                    <div class="callout"><span class="k">// EN SIMPLE — credential reuse</span>Un patrón clásico del mundo
                         real: la misma contraseña se usa para varias cosas. Acá el YAML de <strong>bbot</strong> (la
                         herramienta de recon que alimenta el grafo) guarda la password de Neo4j en texto plano — y esa
                         misma sirve para el usuario del sistema por SSH.</div>
@@ -248,7 +248,7 @@ User graphasm may run the following commands on cypher:
                     <pre><code><span class="g">$</span> sudo /usr/local/bin/bbot -w /root/root.txt -d
 <span class="m">[DBUG] Generated Regex [(([a-z0-9-]+\.)+&lt;contenido real del archivo&gt;...</span></code></pre>
                     <h3>Shell interactiva (RCE vía módulo custom)</h3>
-                    <div class="callout"><span class="k">// EN CRIOLLO — por qué importar un .py es peligroso</span>bbot
+                    <div class="callout"><span class="k">// EN SIMPLE — por qué importar un .py es peligroso</span>bbot
                         permite cargar módulos Python propios con <code>module_dirs</code>. El bug: <strong>importa y
                         ejecuta el archivo <code>.py</code> entero antes de validar</strong> que sea un módulo válido.
                         En Python, "importar" un archivo ya corre cualquier código suelto que tenga arriba de todo —
